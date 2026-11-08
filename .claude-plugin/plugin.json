@@ -1,0 +1,10 @@
+{
+  "name": "lead-engine",
+  "version": "0.1.0",
+  "description": "Lead search engine as a process: tech fingerprints, registers and social signals → qualify → verified contacts → explained scores → first lines → your own warmed mailboxes. /lead-engine:setup does the rest.",
+  "author": { "name": "lowcoding.dev", "url": "https://lowcoding.dev" },
+  "homepage": "https://github.com/lowcoding-dev/lead-engine",
+  "repository": "https://github.com/lowcoding-dev/lead-engine",
+  "license": "MIT",
+  "keywords": ["leads", "outbound", "prospecting", "supabase", "vercel", "knowledge-base"]
+}

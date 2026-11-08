@@ -1,0 +1,12 @@
+{
+  "name": "lowcoding-leads",
+  "owner": { "name": "lowcoding.dev" },
+  "description": "Lead Engine by lowcoding.dev: a Claude Code process bundle that finds companies by signals, qualifies them, verifies contacts and sends from your own mailboxes.",
+  "plugins": [
+    {
+      "name": "lead-engine",
+      "source": "./",
+      "description": "One command sets up a lead search engine (GitHub repo, Supabase, Vercel, knowledge base); skills then find, qualify, score and write to companies from that knowledge base."
+    }
+  ]
+}

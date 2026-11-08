@@ -1,0 +1,33 @@
+# Recurring runs
+
+Two layers. The app (no model) fetches and sends; Claude (with the repo's skills) judges and writes.
+
+| Step | Where | Schedule |
+|---|---|---|
+| urlscan daily pulls, sources cron | app: Supabase pg_cron → `/api/cron/sources` | daily 06:17 UTC |
+| Send tick | app: pg_cron → `/api/cron/send` | every 5 min, Mon–Fri (each lead's local window is checked in code) |
+| Reply / bounce read, stop on reply | app: pg_cron → `/api/cron/replies` | every 15 min |
+| Qualify → find-contact → verify → score → first-lines | Claude scheduled task | weekdays, early morning |
+| Outreach review (replies, stop-loss, queue if auto-queue) | Claude scheduled task | weekdays, afternoon |
+| Weekly review + kb-tidy | Claude scheduled task | Mondays |
+
+Plugins don't load in cloud sessions or scheduled tasks, which is why setup copies every skill into the repo
+(`.claude/skills/`). The cloud environment needs two variables: `LEAD_ENGINE_URL` and `AGENT_TOKEN` (not the
+Supabase access token).
+
+## Option A: Claude Code scheduled tasks (Pro and up; minimum interval hourly)
+In Claude Code run `/schedule` (or create them on claude.ai/code) on this repo, one task each:
+1. **Lead Engine pipeline**, weekdays 07:41 (owner's time zone):
+   "Run the Lead Engine pipeline as CLAUDE.md describes: qualify up to 40 companies, find-contact for up to 25
+   qualified ones, verify, score, then first-lines for up to 15. Stop and report on any cap refusal. Write the run
+   notes in kb/runs/ and commit kb/ changes."
+2. **Lead Engine outreach review**, weekdays 16:13: "/outreach-review"
+3. **Lead Engine weekly review**, Mondays 08:37: "/outreach-review weekly. Then run kb-tidy and commit kb/ changes."
+Pick minutes off the hour (the examples are deliberate) so runs don't queue at :00.
+
+## Option B: GitHub Actions
+Enable `.github/workflows/weekly-review.yml` (instructions at the top of the file: `claude setup-token`, three repo
+secrets, remove `if: false`). Copy the job for a weekday pipeline with the prompt from Option A, item 1.
+GitHub pauses schedules after 60 days without activity on public repos.
+
+Write where the runs live in `kb/setup-state.md` § 7 and `kb/context.md`.
