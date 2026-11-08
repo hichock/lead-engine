@@ -1,0 +1,46 @@
+# Weekly Lead Engine review in GitHub Actions (optional; use this if you don't use Claude Code scheduled tasks).
+# It runs the outreach-review skill on Mondays and commits kb/ changes (run notes, decisions, yields).
+#
+# How to enable:
+#   1. In Claude Code, run `claude setup-token` and copy the token.
+#   2. Repo → Settings → Secrets and variables → Actions → New secret:
+#        CLAUDE_CODE_OAUTH_TOKEN = <token>
+#        LEAD_ENGINE_URL         = https://<your-app>.vercel.app
+#        AGENT_TOKEN             = <the same AGENT_TOKEN as in Vercel>
+#   3. Remove the `if: false` line below and push.
+# Note: GitHub pauses scheduled workflows after 60 days without repo activity on public repos.
+name: lead-engine-weekly-review
+
+on:
+  schedule:
+    - cron: "37 8 * * 1" # Mondays 08:37 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  review:
+    if: false # remove this line to enable
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: anthropics/claude-code-action@v1
+        env:
+          LEAD_ENGINE_URL: ${{ secrets.LEAD_ENGINE_URL }}
+          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: "/outreach-review weekly"
+          claude_args: "--allowedTools Bash(node scripts/le.mjs:*),Read,Write,Edit"
+      - name: Commit kb changes
+        run: |
+          git config user.name "lead-engine-bot"
+          git config user.email "lead-engine-bot@users.noreply.github.com"
+          git add kb/
+          git diff --cached --quiet || git commit -m "kb: weekly review $(date -u +%F)"
+          git push
