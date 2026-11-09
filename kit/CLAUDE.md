@@ -5,11 +5,18 @@ entries, job posts, comments on popular posts), qualifies them on their own webs
 for qualified companies, scores them with written reasons, drafts first lines, sends from the owner's own warmed
 mailboxes and learns from the results every week.
 
-- **App:** Next.js on Vercel + Supabase (this repo). Pages: Leads, Company, Sources & runs, Outreach, Settings.
+- **Mode** (in `kb/context.md`): **A** the app on Supabase + Vercel; **B** the app on the owner's own host and
+  database (`HOSTING.md`); **C** no app: `LEAD_ENGINE_MODE=local`, a local SQLite or own Postgres store, and the
+  dashboard as `docs/report.html` (`report` skill). The commands below are the same in every mode.
+- **App (A, B):** Next.js (this repo). Pages: Leads (with CSV export), Company, Sources & runs, Outreach, Settings.
 - **Memory:** `kb/`. **Read `kb/README.md` and `kb/RULES.md` first, every session.** Then `kb/context.md` before any task.
+  The approved plan is `kb/plan.md`; tools, links and prices only in `kb/tools.md`; best practices indexed in `kb/playbook.md`.
 - **Skills:** `.claude/skills/`. They work in local sessions, cloud sessions, scheduled tasks and GitHub Actions.
-- **The app talks to providers, not Claude.** Skills call `node scripts/le.mjs ...`; the app enforces caps, the 24 h
-  run ledger and "paid contact work only on qualified companies" in code. Never call a paid API directly with curl.
+- **The guard talks to providers, not Claude.** Skills call `node scripts/le.mjs ...`; the app (or, in mode C, the
+  local runner with the same code) enforces caps, the 24 h run ledger and "paid contact work only on qualified
+  companies". Never call a paid API directly with curl.
+- **Stuck?** The `get-help` skill sends a request to the bundle's author (after confirming the owner's contact
+  details, never with secrets). Fallback: info@lowcoding.dev.
 
 ## Routing: when the owner says X, use skill Y
 Use the skill even when the request is short. If two match, run them in pipeline order (top to bottom).
@@ -17,6 +24,9 @@ Use the skill even when the request is short. If two match, run them in pipeline
 | Owner says (examples) | Skill |
 |---|---|
 | "set up", "connect", "deploy", "it's broken after install" | `/lead-engine:setup` (plugin) or resume `kb/setup-state.md` |
+| "what's the plan", "which channels", "research my niche / competitors", "what will it cost", "re-plan" | `plan` |
+| "show the dashboard", "report", "refresh the numbers" (mode C), "dashboard mock" | `report` |
+| "I need help", "contact the author", "support", setup failed twice | `get-help` |
 | "find companies using Softr / Airtable / Bubble…", "tech search", "who runs X", "new users of X" | `source-tech` |
 | "lawyers in Florida", "bar directory", "Companies House", "a register", "licence list" | `source-registers` |
 | "find ops managers at…", "Apollo", "people search", "decision makers in <city>" | `source-people` |
@@ -33,7 +43,8 @@ Use the skill even when the request is short. If two match, run them in pipeline
 | "tidy the kb", "what do you need from me" | `kb-tidy` |
 
 Pipeline order: source-* → qualify → find-contact → verify → activity-research (optional) → score → first-lines →
-owner approves in Outreach (or auto-queue) → app sends → outreach-review.
+owner approves (Outreach page; mode C: in the session, then `le queue`) → app sends (mode C: `le send`, or export to
+a sequencer) → outreach-review → report (mode C).
 
 ## Commands skills use
 ```bash
@@ -42,9 +53,13 @@ node scripts/le.mjs read to-qualify limit=50               # work lists: to-qual
 node scripts/le.mjs src '{"source":"urlscan","params":{"q":"...","slices":true}}'   # guarded source call
 node scripts/le.mjs ingest rows.json                       # idempotent writes (companies, people, signals, drafts, reply_classes, suppression)
 node scripts/le.mjs score                                  # recompute fit × trigger
+node scripts/le.mjs queue <person_id> ...                  # after the owner approves (app: only with auto-queue on)
+# mode C only: init, send [--dry-run], replies, export [--for=sequencer], report
 ```
 Exit code 3 = refused by a cap or the ledger: report it, don't work around it. HTTP 202 = a paid job is still
 running: call again with the same input later (it resumes, it never re-bills).
+
+Tool sign-up links and prices: only from `kb/tools.md` (show the plain URL when a link still reads `{{REF:…}}`).
 
 ## Code rules (full list: `kb/dev-rules.md`)
 - TypeScript strict. No `any` in new code; normalise data once where it enters (loaders, parsers).
@@ -74,6 +89,7 @@ running: call again with the same input later (it resumes, it never re-bills).
 - Never send cold email from the owner's main domain. Never remove the opt-out line unless the owner decides it in
   `kb/decisions.md` with the legal note read.
 - Never scrape LinkedIn with the owner's logged-in session or cookies; no connect or DM automation on their profile.
-- Never put keys, passwords or lists of names/emails in `kb/` or in git. Aggregates only.
+- Never put keys, passwords or lists of names/emails in `kb/` or in git. Aggregates only. `data/` (local store,
+  exports) and `docs/report.html` stay gitignored.
 - Never invent numbers. Label every number `measured` / `sourced` / `stated` / `assumed` / `needs input`.
 - Never promise reply rates. Report the funnel per source and let the stop-loss rules decide.

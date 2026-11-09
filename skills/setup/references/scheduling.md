@@ -12,8 +12,8 @@ Two layers. The app (no model) fetches and sends; Claude (with the repo's skills
 | Weekly review + kb-tidy | Claude scheduled task | Mondays |
 
 Plugins don't load in cloud sessions or scheduled tasks, which is why setup copies every skill into the repo
-(`.claude/skills/`). The cloud environment needs two variables: `LEAD_ENGINE_URL` and `AGENT_TOKEN` (not the
-Supabase access token).
+(`.claude/skills/`). In mode A/B the cloud environment needs two variables: `LEAD_ENGINE_URL` and `AGENT_TOKEN`
+(not the Supabase access token). Mode C needs the store and the keys instead (below).
 
 ## Option A: Claude Code scheduled tasks (Pro and up; minimum interval hourly)
 In Claude Code run `/schedule` (or create them on claude.ai/code) on this repo, one task each:
@@ -29,5 +29,25 @@ Pick minutes off the hour (the examples are deliberate) so runs don't queue at :
 Enable `.github/workflows/weekly-review.yml` (instructions at the top of the file: `claude setup-token`, three repo
 secrets, remove `if: false`). Copy the job for a weekday pipeline with the prompt from Option A, item 1.
 GitHub pauses schedules after 60 days without activity on public repos.
+
+## Mode B: the frequent jobs on your own host
+pg_cron in Supabase works with any host (§9 of the checklist). Without it, use the host's scheduler, system cron or
+an external pinger: the three routes and their schedules are in the app's `HOSTING.md`.
+
+## Mode C: no app
+There is no server, so the frequent jobs run as commands:
+| What | Command | When |
+|---|---|---|
+| Send tick | `node scripts/le.mjs send` | every 10–15 minutes, weekdays (each run sends at most one email per mailbox, inside each lead's window) |
+| Replies | `node scripts/le.mjs replies` | hourly, and before every outreach review |
+| Daily urlscan pulls | the `source-tech` skill in the pipeline task | weekdays |
+| Dashboard | `node scripts/le.mjs report` (the `report` skill) | end of each scheduled run |
+Where they can run:
+- **On the owner's computer** (the store is the local SQLite file): the computer's cron or Task Scheduler for `send`
+  and `replies` (no model needed), and Claude Code desktop scheduled tasks for the skills. Runs only while the
+  computer is on.
+- **In the cloud** (scheduled tasks, GitHub Actions): set `LEAD_ENGINE_MODE=local` and `LEAD_ENGINE_DB=postgres://…`
+  plus the source keys and mailboxes as environment secrets. Scheduled tasks run at most hourly, so `send` runs
+  once an hour (about 7–8 sends per mailbox per day inside a 9–17 window): say so, or use a sequencer instead.
 
 Write where the runs live in `kb/setup-state.md` § 7 and `kb/context.md`.

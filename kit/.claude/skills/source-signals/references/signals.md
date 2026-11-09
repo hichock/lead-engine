@@ -26,3 +26,11 @@
 ## Signal question for every lead
 "Why this one, today?" Generic signals are commodities; niche and first-party signals are the edge. Timing beats copy.
 Run micro-campaigns: 50–250 contacts sharing one trigger that is relevant this week (sourced, generic practice).
+
+## The signal table approach (generic practice, sourced 2026-11)
+Keep one table of candidate signals per offer: signal | source | which offer it serves | evidence so far (measured n,
+or "not tested"). Store every signal as a dated row on the company even before it is proven, then report reply and
+positive rates per signal kind in the weekly review: "reason to buy now" signals can only be validated on replies.
+Useful kinds beyond the ones above: a new opening or new licence (a register's "new" list, diffed daily), an ownership
+or officer change, a contract or renewal date a partner knows, a tool vendor dropping an integration, seasonality
+(timing, not a reason). Closed-lost mining: store the real loss reason and re-engage when it changes.

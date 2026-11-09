@@ -7,7 +7,8 @@ disable-model-invocation: true
 
 Read `kb/RULES.md`, `kb/context.md`, `kb/offer.md` (replies, booking link), `kb/voice.md` and `kb/sources.md` first.
 Then `references/reply-rules.md`, `references/stop-loss.md`; for mailbox and domain questions
-`references/sending-infra.md`; for legal questions `references/compliance.md`.
+`references/sending-infra.md`; for calls and LinkedIn `references/email-and-call.md`; for legal questions
+`references/compliance.md`.
 
 ## Daily
 
@@ -45,8 +46,15 @@ node scripts/le.mjs queue <person_id> <person_id> ...
 ```
 The app re-runs the send checks (verifier ok, not suppressed, not contacted, ≤ 90 words) and refuses the rest with a
 reason. Auto-queue off → tell the owner how many drafts wait in Outreach → Drafts to approve.
+**Mode C (no app):** show the drafts in the session (company, evidence line, subject, body). Queue only the ones the
+owner approves in this session (`le queue <ids>`); the same send checks run. Then `le send` runs from the schedule
+(or now, inside the window), and `le replies` before every review. If the owner uses a sequencer instead:
+`le export --for=sequencer` and tell them where the CSV is (never queue the same people locally as well).
 
-### 5. Daily note
+### 5. Dashboard (mode C)
+Run the `report` skill so `docs/report.html` shows today's numbers.
+
+### 6. Daily note
 Write `kb/runs/<YYYY-MM-DD>-outreach-review.md`: sent today by mailbox, replies by class (counts), bounces, queue
 size, stop-loss status, anything paused. 10 lines max.
 

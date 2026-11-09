@@ -3,6 +3,12 @@
 Newest first. Format: `date - decision - why - where`. Supersede, never delete.
 The lines below are the bundle defaults. Change any of them by adding a newer line that supersedes it.
 
+## 2026-11-09 (bundle defaults)
+- **No question round at setup: the plan skill researches the site, niche and competitors and proposes channels, services, cost and a timeline; the owner approves or edits.** - Out of the box for non-technical owners; questions only for logins and keys. - `plan` skill
+- **Three hosting modes, picked from what the owner already has: A Supabase + Vercel (default), B own host and database, C no app (local store, report file).** - Owners with their own stack shouldn't need two new accounts. - setup `references/modes.md`
+- **Tool links and prices live only in kb/tools.md; some links are the author's referral links, disclosed there.** - One place to update; the owner pays the same. - `kb/tools.md`
+- **Help goes through the get-help skill (support endpoint, contact confirmed first, no secrets).** - A person answers; secrets never leave the repo. - `get-help` skill
+
 ## 2026-11-08 (bundle defaults)
 - **Discover free → qualify on the website → pay for contacts only on qualified companies → verify → send.** - Paying before qualifying wasted credits in the bundle author's runs. - enforced in `lib/guard.ts`
 - **Only verifier `ok` is sendable; catch_all and unknown go to a retry list.** - The one catch_all address the author sent to bounced (2026-10-26). - `lib/sender/checks.ts`

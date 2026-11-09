@@ -5,21 +5,37 @@ Run from the project folder. Replace `<…>`. Tick the matching line in `kb/setu
 ## §1 Tools
 | Tool | Check | Install |
 |---|---|---|
-| Node ≥ 20 | `node -v` | https://nodejs.org (LTS) or `brew install node` |
+| Node ≥ 22.13 (built-in SQLite for mode C) | `node -v` | https://nodejs.org (LTS) or `brew install node` |
 | git | `git --version` | `brew install git` / `apt-get install -y git` |
 | GitHub CLI | `gh --version` | `brew install gh` / https://cli.github.com |
-| Supabase CLI | `supabase --version` | `brew install supabase/tap/supabase`, or use `npx -y supabase <cmd>` everywhere |
-| Vercel CLI | `vercel --version` | `npm i -g vercel`, or `npx -y vercel <cmd>` |
+| Supabase CLI (mode A/B, only without the Supabase connector) | `supabase --version` | `brew install supabase/tap/supabase`, or use `npx -y supabase <cmd>` everywhere |
+| Vercel CLI (mode A, only without the Vercel connector) | `vercel --version` | `npm i -g vercel`, or `npx -y vercel <cmd>` |
 | openssl | `openssl version` | usually present |
 
 ## §2 Copy
 ```bash
 cp -Rn "$LE/template/." . && cp -Rn "$LE/kit/." .
-git init -q 2>/dev/null; npm install && npx tsc --noEmit && npm test
-cp .env.example .env.local      # fill as you go; .env.local is gitignored
+[ -d .git ] || git init -q
+cp -n .env.example .env.local   # fill as you go; .env.local is gitignored
+(npm install && npx tsc --noEmit && npm test) > /tmp/le-install.log 2>&1 &   # runs while the plan is researched
 ```
+Inside an existing repo with its own `CLAUDE.md`: `cp -n` keeps theirs; append the kit's file under a heading
+`## Lead Engine` instead (`cat "$LE/kit/CLAUDE.md" >> CLAUDE.md` after checking it is not there yet).
 
-## §3 Logins
+## §3 Connectors first
+If a connector answered in the environment check, use it for that service and skip its CLI login:
+- Supabase connector: `list_organizations` → `create_project` (owner's yes; name, region near the leads, generated DB
+  password kept in `.env.local`) → wait for `get_project` status ACTIVE_HEALTHY → `apply_migration` with each file in
+  `supabase/migrations/` in order (name = file name without `.sql`) → `get_project_url` and `get_publishable_keys` for
+  the URL and anon key. The service-role key is not exposed by the connector: the owner copies it from the dashboard
+  (`guides/supabase.md`, "API keys") into `.env.local` and the host's env vars. Team member and auth URLs: `execute_sql`
+  for the insert; auth URLs in the dashboard (Authentication → URL Configuration).
+- Vercel connector: `list_teams` → `create_project` (framework nextjs, linked to the GitHub repo if possible) →
+  `create_project_env` per variable (target production; never `DEMO`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`)
+  → deploy by pushing to the linked repo (or `create_deployment`) → `get_deployment` until READY.
+- GitHub connector: read only for setup; create repos with `gh` locally.
+
+## §3b CLI logins (local, when there is no connector)
 ```bash
 gh auth login            # browser flow; choose HTTPS
 supabase login           # browser flow (or: supabase login --token "$SUPABASE_ACCESS_TOKEN")
@@ -29,6 +45,15 @@ gh auth status && supabase projects list && vercel whoami
 Also ask the owner for a Supabase personal access token (supabase.com/dashboard/account/tokens) and put it in
 `.env.local` as `SUPABASE_ACCESS_TOKEN`: `scripts/le.mjs sql` and the auth-config call below use it. It grants access
 to all their Supabase projects, so it stays local (not in Vercel, not in cloud environments).
+
+## §4 Mode C (no app)
+```bash
+grep -q '^LEAD_ENGINE_MODE=' .env.local && sed -i.bak 's/^LEAD_ENGINE_MODE=.*/LEAD_ENGINE_MODE=local/' .env.local || echo "LEAD_ENGINE_MODE=local" >> .env.local
+# cloud sessions and scheduled tasks: a Postgres URL, because container files don't last
+#   echo "LEAD_ENGINE_DB=postgres://…" >> .env.local && npm i pg      (in the cloud: an environment secret, not the file)
+node scripts/le.mjs init && node scripts/le.mjs env
+```
+Skip §5 GitHub only if the owner wants no remote at all (kb/ stays in local git).
 
 ## §5 GitHub
 ```bash

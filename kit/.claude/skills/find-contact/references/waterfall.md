@@ -13,7 +13,7 @@ qualified companies → verify → send. A Clay test burned its free credits on 
 | Apollo free people search | $0 | Name and title, no email (see source-people) |
 | Monid → Hunter `/domain-search` | $0.0245 per result (measured 2026-11-03/04) | Fallback finder |
 | Monid → ContactOut work email | $0.10 when found; verify-only $0.01 (measured) | High-score leads only |
-| Prospeo | credits | Its "VERIFIED" came back catch_all on MillionVerifier for 5 of 10 (measured 2026-11-03): re-verify everything |
+| Prospeo (not built) | credits | No app module. Its "VERIFIED" came back catch_all on MillionVerifier for 5 of 10 (measured 2026-11-03); if you add it, re-verify everything |
 
 ## Monid
 A pay-per-call wrapper over ~90 providers through one key, as REST, MCP, CLI or a skill; $1 free credit (sourced

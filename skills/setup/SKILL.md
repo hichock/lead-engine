@@ -1,101 +1,94 @@
 ---
 name: setup
-description: Sets up Lead Engine end to end in the current folder (or resumes a half-finished setup) - checks tools, logs in to GitHub, Supabase and Vercel, drafts the knowledge base from the owner's website with at most 8 questions, creates the private repo, database and deployment, copies the skills kit, schedules the recurring runs and does the first free run. Run it with /lead-engine:setup.
+description: Sets up Lead Engine end to end in the current folder or attached repo (or resumes a half-finished setup). It checks what the owner already has (connectors, CLIs, keys, repo), researches the owner's website, niche and competitors and proposes a plan with channels, costs, a timeline and a dashboard mock (no question round), then builds only what the approved plan needs in one of three modes (Supabase + Vercel, own host and database, or no app), schedules the runs and does the first free run. Run it with /lead-engine:setup.
 disable-model-invocation: true
 ---
 # Lead Engine setup
 
-If `kb/` already exists here, read `kb/RULES.md`, `kb/context.md` and `kb/setup-state.md` first (resume mode).
-Otherwise this run creates them in step 2.
+If `kb/setup-state.md` exists here, read `kb/RULES.md`, `kb/context.md` and `kb/setup-state.md` first and resume from
+the first open `[ ]` (resume mode). Tick each item the moment it is done; write non-secret values (mode, repo, project
+ref, URL) after it. Keys go to `.env.local` (gitignored) and the host or cloud environment, never to `kb/` or git.
+Never print a key.
 
-A resumable checklist. The state lives in `kb/setup-state.md` in the user's project: tick each item the moment it
-is done, write non-secret values (repo, project ref, URL) next to it, and on every start resume from the first open
-`[ ]`. Keys go to `.env.local` (gitignored), Vercel env and, for scheduled runs, the cloud environment. Never print a
-key, never write one to `kb/` or git.
+References: `references/environment-check.md`, `references/modes.md`, `references/checklist.md` (exact commands),
+`references/keys.md`, `references/scheduling.md`, step-by-step `references/guides/` (show the owner the one they
+need). Tool links and prices: only from the project's `kb/tools.md`.
 
-Details per step: `references/checklist.md` (exact commands), `references/interview.md` (auto-draft + questions),
-`references/scheduling.md` (recurring runs), `references/keys.md` (where each key comes from, free tiers).
+**How to talk to the owner:** plain short sentences. Say what you are about to do and why in one line before anything
+that creates something or opens a login. Ask before anything that costs money. **Don't ask questions the research
+can answer.** The owner approves the plan, confirms the mode in one line, and gives logins or keys only when a step
+can't run without them.
 
-Talk to the owner in plain words: say what you are about to do and why in one line before each step that creates
-something or opens a browser login. Ask before anything that costs money.
+## 0. Find the bundle files
+Bundle root (holds `template/` and `kit/`): the session line "Lead Engine plugin root: …", else `${CLAUDE_PLUGIN_ROOT}`,
+else `ls -d ~/.claude/plugins/marketplaces/lowcoding-leads ~/.claude/plugins/cache/lowcoding-leads/lead-engine/* 2>/dev/null | head -1`,
+else `git clone --depth 1 https://github.com/lowcoding-dev/lead-engine "$TMPDIR/lead-engine"`. Call it `$LE`.
 
-## 0. Find the bundle files and the project folder
-1. Bundle root (holds `template/` and `kit/`): the session context line "Lead Engine plugin root: …", else
-   `${CLAUDE_PLUGIN_ROOT}`, else
-   `ls -d ~/.claude/plugins/marketplaces/lowcoding-leads ~/.claude/plugins/cache/lowcoding-leads/lead-engine/* 2>/dev/null | head -1`,
-   else `git clone --depth 1 https://github.com/lowcoding-dev/lead-engine "$TMPDIR/lead-engine"`. Call it `$LE`.
-2. Project folder: if `kb/setup-state.md` exists here, resume. Else, if this folder is empty (or only has `.git`),
-   use it; otherwise ask for a name and create `./<name>` (default `lead-engine`). `cd` there for every later step.
+## 1. Check what's already there (environment-check.md)
+Local or cloud session; which connectors answer (Supabase, Vercel, GitHub, Zapmail); which CLIs are logged in; which
+keys are set (names only); the repo situation. Show the one-block summary. Follow the repo table in
+environment-check.md exactly: in a cloud session never create a repo; use an empty attached repo, ask before adding
+to one with code, or explain how to create and attach a new one (`guides/claude-cloud-session.md`).
 
-## 1. Tools  (checklist §1)
-Check `node -v` (≥ 20), `git`, `gh`, `supabase` (or `npx -y supabase --version`), `vercel` (or `npx -y vercel --version`).
-Offer the install command for anything missing (checklist §1). Don't continue without node, git and gh.
+## 2. Scaffold (checklist §1–2)
+Tools: node ≥ 22.13 and git are required; gh, supabase and vercel CLIs only if the mode needs them and no connector
+answers. Copy the app and the kit without overwriting (`cp -Rn`), start `npm install` in the background. Open
+`kb/setup-state.md` and tick § 1.
 
-## 2. Copy the app and the kit  (checklist §2)
-```bash
-cp -Rn "$LE/template/." .      # Next.js app, migrations, tests (never overwrites existing files)
-cp -Rn "$LE/kit/." .           # CLAUDE.md, kb/, .claude/ (skills, hooks, settings), .github/
-git init -q 2>/dev/null; npm install
+## 3. Plan (the `plan` skill)
+Get the website URL from the folder, the repo README, `kb/context.md` or the session; ask for it only if none of
+these has it (one question). Then read `.claude/skills/plan/SKILL.md` in the project and follow it: research the
+company, offer, buyers, niche and competitors; pick channels; services and monthly cost from `kb/tools.md`; timeline
+with milestones; the dashboard mock in their brand; `kb/plan.md` + `docs/plan.html`. Show it and get approval.
+Edits → update and ask again. **Nothing is created on any account before the plan is approved.**
+
+## 4. Mode (modes.md)
+Pick A, B or C from step 1 and the plan. Confirm in one line ("You have X, so I'll use mode M: … OK?"). Write it to
+`kb/context.md` § Setup and `kb/decisions.md`.
+
+## 5. Build only what the plan and mode need
+- **Repo:** local with gh → `gh repo create <name> --private --source . --push` (checklist §5). Cloud → commit and push
+  to the attached repo's branch.
+- **Mode A:** Supabase (connector first, else CLI; checklist §3, §6), Vercel (connector first, else CLI; §3, §7),
+  owner in `team_members`, auth URLs, deploy, then check: `/login` answers 200, `node scripts/le.mjs read funnel`
+  answers JSON (not 401), the owner signs in by magic link and sees an empty Leads page. Note: Vercel Hobby is
+  non-commercial; a business should use Pro.
+- **Mode B:** reuse their Supabase project (check table names don't clash, then apply the migrations), give the
+  owner the env-var list and the scheduler options from the app's `HOSTING.md`, check the same three things on their URL.
+- **Mode C:** checklist §4: `LEAD_ENGINE_MODE=local`, store (SQLite locally; `LEAD_ENGINE_DB=postgres://…` + `npm i pg`
+  for cloud or scheduled runs), `node scripts/le.mjs init`.
+
+## 6. Keys for the plan's sources (keys.md)
+Only the ones the approved channels use, free first (urlscan; BigQuery if tech search is in the plan; MillionVerifier
+before the first send). For each: say what it is for and what it costs (from `kb/tools.md`), show its guide, store it
+where the mode says, tick it. Mode A: redeploy once at the end. Leave caps at the defaults unless the plan sets a budget.
+
+## 7. Schedules (scheduling.md)
+- Mode A/B: frequent app jobs in Supabase pg_cron (checklist §9) or the host's scheduler (`HOSTING.md`). Write the icp
+  targets into the app: `node scripts/le.mjs ingest '{"scoring":{"countries":[…],"tools":[…]}}'`.
+- Every mode: the recurring Claude runs (Claude Code scheduled tasks, desktop tasks or GitHub Actions); mode C also
+  `le send` and `le replies` (scheduling.md § Mode C).
+
+## 8. First run ($0)
+The plan's first channel with free sources only (for tech search: `source-tech` urlscan 30-day slices, and one HTTP
+Archive crawl with a dry run if `GCP_SA_KEY` is set), then `qualify` on the first 20. Show the real rows: the app's
+Leads page (A/B) or `docs/report.html` via the `report` skill (C).
+
+## 9. What happens next (show this card, then tick the last item)
 ```
-Then open `kb/setup-state.md` and continue from it. Run `npx tsc --noEmit && npm test` once to prove the copy works.
-
-## 3. Logins  (checklist §3)
-Each is a browser or device flow the owner completes: `gh auth login`, `supabase login` (or with a personal access
-token, see keys.md), `vercel login`. Verify with `gh auth status`, `supabase projects list`, `vercel whoami`.
-
-## 4. Knowledge base: auto-draft, then "what's wrong?"  (interview.md)
-Ask for the website (and optionally a CSV of current customers). Read it, draft `kb/context.md`, `kb/offer.md`,
-`kb/icp.md`, `kb/voice.md`, `kb/sources.md`, then show a 10-line summary and ask at most 8 questions (interview.md).
-Write answers labelled `stated`; mark unknowns `needs input`. Mirror icp targets into the app later (step 9).
-
-## 5. GitHub repo  (checklist §5)
-`git add -A && git commit -m "Lead Engine: app and kit"` then
-`gh repo create <name> --private --source . --remote origin --push`. Write the repo name in setup-state.
-
-## 6. Supabase  (checklist §6)
-Pick org and region (closest to the owner's leads). Create the project with a generated DB password (kept in
-`.env.local` as `SUPABASE_DB_PASSWORD`), wait until it is healthy, link, `supabase db push`. Get the URL, anon and
-service-role keys into `.env.local`. Add the owner's email to `team_members`, set the auth site URL and redirect
-(checklist §6 has the SQL and API calls).
-
-## 7. Vercel  (checklist §7)
-Generate `CRON_SECRET`, `AGENT_TOKEN`, `MAILBOX_ENCRYPTION_KEY`. `vercel link`, add every variable from `.env.local`
-that the app needs (never `DEMO`), `vercel deploy --prod`. Then set `NEXT_PUBLIC_SITE_URL` and `LEAD_ENGINE_URL` to the
-production URL, update the Supabase auth URLs, redeploy. Open the URL: the Leads page must ask for sign-in. Send
-the owner the magic link and confirm they see an empty Leads page (not "No access").
-Note for the owner: Vercel Hobby is for personal, non-commercial use; a business should use Vercel Pro.
-
-## 8. Source keys  (keys.md)
-Free first: `URLSCAN_API_KEY`, `GCP_SA_KEY` (BigQuery, for HTTP Archive), `MILLIONVERIFIER_API_KEY` (paid per check,
-small packs). Optional: Apollo, Monid, Apify, HackerTarget. For each key the owner gives: `.env.local` + `vercel env
-add` + tick it in setup-state. Redeploy once at the end of this step. Leave caps at the defaults unless the owner
-gives a budget (Settings → Caps; mirror in `kb/sources.md`).
-
-## 9. App schedule and settings  (checklist §9)
-Fill `supabase/sql/schedule.sql` (`{{APP_URL}}`, `{{CRON_SECRET}}`) in a temp copy and run it (send every 5 min on
-weekdays, replies every 15 min, sources daily). Never commit the filled copy. Write the icp targets to the app:
-`node scripts/le.mjs ingest '{"scoring":{"countries":[…],"tools":[…]}}'`. Check `node scripts/le.mjs env`.
-
-## 10. Recurring Claude runs  (scheduling.md)
-Offer two options and set up the one the owner picks:
-- **Claude Code scheduled tasks** (`/schedule`, Pro and up, runs in the cloud on the repo): weekdays pipeline,
-  daily outreach review, weekly review. The cloud environment needs `LEAD_ENGINE_URL` and `AGENT_TOKEN`.
-- **GitHub Actions** with `claude-code-action`: enable `.github/workflows/weekly-review.yml` (secrets listed in it).
-
-## 11. First run ($0)
-Run the `source-tech` skill for the owner's first target tool with urlscan (30-day slices) and, if `GCP_SA_KEY` is
-set, one HTTP Archive crawl (dry run first). Then `qualify` on the first 20. Show the Leads URL with real rows.
-
-## 12. What happens next (show this card, then tick the last item)
-```
-Lead Engine is live: <URL>   Repo: <repo>   Knowledge base: kb/README.md
-Every morning   the app pulls new sites for your tools (free) and sends due emails in each lead's working hours
+Lead Engine is live: <app URL or docs/report.html>   Mode: <A|B|C>   Repo: <repo>   Plan: docs/plan.html
+Every morning   new sites for your tools are pulled (free); due emails go out in each lead's working hours
 Weekdays        Claude qualifies, finds and verifies contacts, scores and drafts emails (scheduled task)
-You             approve drafts in Outreach, answer replies (forwarded to you), add mailboxes in Settings
+You             approve drafts (Outreach page, or in the session in mode C), answer replies, add mailboxes
 Mondays         weekly review: what to kill or scale, with numbers; decisions go to kb/decisions.md
-Open questions  <list of `needs input` items from kb/>
+Stuck?          say "I need help": the get-help skill contacts the bundle's author (or email info@lowcoding.dev)
+Check these     <the plan's "Check these" items and any `needs input` in kb/>
 ```
-Then commit kb changes (`git add kb && git commit -m "kb: setup done" && git push`).
+Commit kb changes (`git add kb docs/plan.html docs/dashboard-mock.html docs/mock-data.json && git commit -m "kb: setup done"`
+and push). Write `kb/runs/<YYYY-MM-DD>-setup.md` (mode, what was created and where, what is open; no keys) and fill
+the `kb/sources.md` rows for every key added.
 
-Write `kb/runs/<YYYY-MM-DD>-setup.md` (what was created, where, what is still open; no keys) and fill the
-`kb/sources.md` rows for every key that was added (on, cap, last run).
+## When a step fails twice
+Read the matching guide and `kb/findings.md`. Still stuck: offer the `get-help` skill (it summarises the problem
+without secrets, confirms how to reach the owner and sends it to the bundle's author). Continue with steps that don't
+depend on the failed one.

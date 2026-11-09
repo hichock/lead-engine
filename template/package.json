@@ -4,7 +4,7 @@
   "private": true,
   "description": "Lead Engine app: sources, leads, scores and an own sender on Supabase + Vercel.",
   "license": "MIT",
-  "engines": { "node": ">=20.11" },
+  "engines": { "node": ">=22.13" },
   "scripts": {
     "dev": "next dev",
     "demo": "DEMO=1 next dev",

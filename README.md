@@ -2,7 +2,7 @@
 
 A lead search engine that runs as a process inside Claude Code.
 It finds companies by signals (the tools they run on, public registers, job posts, comments on popular posts), checks each one on its own website, looks up and verifies contacts only for the ones that fit, ranks them with written reasons, drafts the first emails and sends them from your own warmed mailboxes.
-One command sets it all up: a private GitHub repo, a Supabase database, a Vercel deployment and a knowledge base the skills read and write every day.
+One command sets it all up. It starts by researching your website, niche and competitors and shows you a plan: which channels fit, which services you need and what they cost, a timeline, and a mock of your dashboard in your colours. You approve it; then it builds only what the plan needs, in one of three modes: on Supabase + Vercel, on your own host and database, or with no app at all (everything runs from Claude Code and the dashboard is a generated page).
 
 ![Leads page](docs/screenshots/leads-desktop.png)
 
@@ -52,32 +52,31 @@ Then open an empty folder and run `/lead-engine:setup`.
 
 ## What setup does
 
-`/lead-engine:setup` is a checklist that saves its progress in `kb/setup-state.md`, so a failed step resumes instead of starting over.
+`/lead-engine:setup` is a checklist that saves its progress in `kb/setup-state.md`, so a failed step resumes instead of starting over. There is no question round: you approve a plan, confirm the mode in one line, and give logins or keys only where a step can't run without them.
 
-1. **Checks tools:** Node 20+, git, GitHub CLI, Supabase CLI, Vercel CLI. Offers install commands for anything missing.
+1. **Checks what you already have:** connectors in the session (Supabase, Vercel, GitHub, Zapmail), logged-in CLIs, keys already set, and the repo. In a cloud session it uses the attached repo (if it's empty), asks before adding to a repo with code, and explains how to attach a new one; on your computer it can create a private repo with `gh`.
 2. **Copies the app and the kit** into the folder: the Next.js app, migrations, tests, `CLAUDE.md`, `kb/`, the skills, hooks and an optional GitHub Actions workflow.
-3. **Logs in:** `gh auth login`, `supabase login`, `vercel login` (browser flows you click through).
-4. **Drafts the knowledge base from your website**, then asks "what's wrong?" with at most 8 questions: offer and price, who buys and who never, which signals mean "now", budget and keys, your writing voice, sending setup, who answers replies.
-5. **Creates a private GitHub repo** and pushes.
-6. **Creates the Supabase project**, applies the migrations (row-level security on every table), adds you as the owner, sets the sign-in URLs.
-7. **Creates the Vercel project**, sets the environment variables, deploys, and checks you can sign in with a magic link.
-8. **Adds your source keys** (urlscan and Google BigQuery are free; MillionVerifier is pay per check; Apollo, Monid and Apify are optional).
-9. **Schedules the app jobs** in Supabase pg_cron: send tick every 5 minutes on weekdays, reply check every 15 minutes, source pull daily.
-10. **Schedules the Claude runs:** Claude Code scheduled tasks, or GitHub Actions if you prefer.
-11. **Does the first free run:** finds companies running your target tool and qualifies the first 20.
-12. **Shows the live URL and what happens next.**
+3. **Researches and plans** (the `plan` skill): your company, offer, buyers, niche and competitors (and the tools and channels they use). It picks 2 to 4 channels with reasons, lists the services with costs, gives a timeline with milestones (no promised reply rates), and builds a dashboard mock with example data in your brand. Output: `kb/plan.md` and `docs/plan.html`. You approve or edit it.
+4. **Picks the mode** from what you have and confirms it in one line:
+   - **A. Supabase + Vercel** (default; free tiers are fine to start).
+   - **B. Your own host and database:** any Node host (Railway, Render, Fly, a VPS) and your Supabase project; env vars and cron alternatives in `template/HOSTING.md`.
+   - **C. No app:** everything runs from Claude Code with a local SQLite store (or your own Postgres); the dashboard is a generated HTML page refreshed by each run; sending through your own mailboxes (SMTP) or a CSV for your sequencer.
+5. **Builds only what the plan needs:** repo, database, deploy and sign-in check (A, B), or the local store (C). Connectors first, CLIs second. Step-by-step guides for every service are in `skills/setup/references/guides/`.
+6. **Adds the keys the plan's channels need**, free first (urlscan, Google BigQuery), MillionVerifier before the first send.
+7. **Schedules the jobs:** sending, replies and daily pulls (pg_cron, your host's scheduler, or `le send` / `le replies` in mode C), and the Claude runs (scheduled tasks or GitHub Actions).
+8. **Does the first free run** on the plan's first channel and qualifies the first 20 companies.
+9. **Shows where everything is and what happens next.**
 
 ## What you need
 
 - Claude Code (Pro or higher if you want scheduled tasks in the cloud).
 - A GitHub account.
-- A Supabase account (the free plan works to start; free projects pause when idle).
-- A Vercel account. Hobby is for personal, non-commercial use, so a business should use Pro.
+- Mode A: a Supabase account (the free plan works to start; free projects pause when idle) and a Vercel account (Hobby is for personal, non-commercial use, so a business should use Pro). Mode B: your own host and Supabase project. Mode C: nothing beyond Node 22.13+ (and a Postgres URL if you want the runs in the cloud).
 - For sending: one or more secondary domains with warmed mailboxes (Google Workspace or Microsoft 365). Never your main domain.
 
 ## Costs
 
-The bundle is free. These are the outside services, with the default caps the app enforces. Prices were checked or measured in October and November 2026; check the provider before you pay.
+The bundle is free. These are the outside services, with the default caps the app enforces. Prices were checked or measured in October and November 2026; check the provider before you pay. Sign-up links, free tiers and current discounts for every tool are in one file, [`kit/kb/tools.md`](kit/kb/tools.md). Some of those links are the author's referral links (you pay the same; it says so in the file).
 
 | Service | Free tier | Paid | Default cap in the app |
 |---|---|---|---|
@@ -100,7 +99,10 @@ The plugin carries only `setup`. Setup copies the worker skills into your repo (
 
 | Skill | What it does | Paid calls |
 |---|---|---|
-| `/lead-engine:setup` | Tools, logins, interview, repo, database, deploy, schedules, first run | none |
+| `/lead-engine:setup` | Environment check, plan, mode, repo, database or local store, deploy, schedules, first run | none |
+| `plan` | Researches the site, niche and competitors; channels, services and cost, timeline, dashboard mock; asks for approval | none |
+| `report` | The dashboard as one HTML file (mode C, or a mock in your brand) | none |
+| `get-help` | Sends your problem to the bundle's author (no secrets; confirms how to reach you); logs the request id | none |
 | `source-tech` | Companies by the tool they run: HTTP Archive (dry run, poll, never re-run) and urlscan date slices; schedules daily pulls | none |
 | `source-registers` | Professional registers and directories via small adapters; emails only where the register publishes them | none |
 | `source-people` | Apollo free people search, domain guess, site scan | none |
@@ -128,13 +130,16 @@ Each skill starts by reading `kb/RULES.md`, `kb/context.md` and its domain files
 | Outreach review: replies, stop-loss, queue | Claude scheduled task | weekday afternoons |
 | Weekly review and knowledge base tidy | Claude scheduled task | Mondays |
 
-The app does the fetching and sending, which needs no model. Claude does the judging and writing.
+The app does the fetching and sending, which needs no model. Claude does the judging and writing. In mode C there is no app: `node scripts/le.mjs send` and `replies` run from your computer's scheduler or a scheduled task, with the same send rules (see `skills/setup/references/scheduling.md`).
 
 ## The knowledge base
 
 `kb/` is the system's memory, and it is plain markdown in your repo:
 
 - `context.md`, `offer.md`, `icp.md`, `voice.md`: your business, your offer, who buys, how you write. Drafted from your website at setup.
+- `plan.md`: the approved plan (channels, services and cost, timeline, mode); the page version is `docs/plan.html`.
+- `tools.md`: every tool with its sign-up link, free tier, price and known discounts. Skills and setup link to tools only through this file.
+- `playbook.md`: an index of the outreach best practices (stage order, signal tables, copy and subject rules, sequence timing, stop-loss, reply classes, email plus call, sending infrastructure, partner channels, compliance, and the non-obvious channels we found: doc-share, viral-post commenters with per-prospect activity research, technology search, registers with named emails, Apollo free search with domain guess, job-post signals). Each rule lives in one skill reference file.
 - `sources.md`: one row per source with access, cost, cap per run and yield to date. Skills update it after every run.
 - `decisions.md`: every rule and choice, newest first, with the reason. Owner corrections become rules here so they never happen twice.
 - `findings.md`, `runs/`, `research/`: what broke, what ran, what was researched.
@@ -142,7 +147,7 @@ The app does the fetching and sending, which needs no model. Claude does the jud
 
 A session-start hook prints the map, the latest decisions and any unfinished setup step at the start of every session, including cloud sessions and scheduled tasks.
 
-## Guardrails built into the app
+## Guardrails built into the app (and the local runner in mode C, which uses the same code)
 
 - **Caps per run day and per month**, checked before every paid call (`lib/guard.ts`, tested).
 - **Paid contact work only on qualified companies with an evidence line**, refused in code with a test that proves no provider is called.
@@ -161,13 +166,19 @@ This is not legal advice. Cold email to businesses is allowed in many places wit
 No. Our own cold sends from this kind of setup had 0 human replies from 119 first emails up to 2026-11-06, with follow-ups just starting. That is why the bundle reports the funnel per source and ships stop-loss and kill rules instead of rate promises.
 
 **Can I try it without accounts?**
-Yes: `cd template && npm install && npm run demo`, then open http://localhost:3000. Demo mode shows example data and saves nothing.
+Yes: `cd template && npm install && npm run demo`, then open http://localhost:3000. Demo mode shows example data and saves nothing. Or run setup in mode C: no Supabase, no Vercel, everything local.
+
+**I already have hosting and a database.**
+Use mode B: the app runs on any Node host and your Supabase project (`template/HOSTING.md`). With plain Postgres and no Supabase, use mode C with `LEAD_ENGINE_DB=postgres://…`: the web app needs Supabase's API and sign-in, so on plain Postgres the dashboard is the generated report.
+
+**I'm stuck.**
+Say "I need help". The `get-help` skill summarises the problem without keys or secrets, confirms how to reach you and sends it to the author (`GET https://jobsearch-roan-ten.vercel.app/api/support` describes the endpoint). A person reads every request. Or email info@lowcoding.dev.
 
 **Where do my API keys go?**
 In `.env.local` (gitignored), Vercel environment variables, and for scheduled runs the two variables `LEAD_ENGINE_URL` and `AGENT_TOKEN`. Skills never see provider keys; they call your app, and the app calls the provider.
 
 **I already use a sequencer.**
-Keep it. Export qualified, verified leads from the Leads page or the database and skip the own sender. The own sender saves a sequencer subscription at small volume; past about 10 mailboxes or with a team inbox a sequencer may be worth it.
+Keep it. On the Leads page, **For a sequencer** downloads a CSV of verified people at qualified companies with their drafted emails (columns Instantly and Smartlead map by default); **Export CSV** downloads every company with its best contact. In mode C: `node scripts/le.mjs export --for=sequencer`. Then skip the own sender. The own sender saves a sequencer subscription at small volume; past about 10 mailboxes or with a team inbox a sequencer may be worth it.
 
 **Which tools can it find?**
 Anything with a fingerprint in page code or in Wappalyzer's list: Softr, Airtable, Bubble, Glide, Webflow, Memberstack, Make, Zapier, GoHighLevel and thousands more. Tools without a public fingerprint (Clay, Monday, ClickUp) come from job posts instead.
@@ -183,9 +194,9 @@ Tell Claude ("from now on, skip companies over 200 people"). `kb-keeper` writes 
 ```
 .claude-plugin/       marketplace.json, plugin.json
 hooks/, scripts/      plugin session-start hook (points to setup when a folder has no kit)
-skills/setup/         /lead-engine:setup and its reference files
+skills/setup/         /lead-engine:setup, its references and step-by-step guides (references/guides/)
 kit/                  copied into your project: CLAUDE.md, kb/, .claude/ (skills, hooks), .github/workflows/
-template/             the Next.js app: pages, API routes, lib/ (sources, sender, scoring, guard), migrations, tests
+template/             the Next.js app: pages, API routes, lib/ (sources, sender, scoring, guard, local mode), migrations, tests
 docs/screenshots/     the images above
 ```
 

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>{{COMPANY}} Lead Plan</title>
+<!--
+  docs/plan.html, filled by the plan skill. Replace every {{…}}; repeat the marked rows; delete the comments.
+  {{BRAND}} = the company's accent colour as #rrggbb (also used by the dashboard mock).
+  Layout: one reading column with wide tables in their own scroll boxes; the mock sits in a framed panel at the end.
+-->
+<style>
+:root {
+  --bg: #f3f4f1; --surface: #ffffff; --surface-2: #ebede8; --line: #dcdfd8; --ink: #1b201c; --ink-2: #444c45; --muted: #6a726b;
+  --brand: {{BRAND}}; --brand-soft: color-mix(in srgb, var(--brand) 12%, white); --brand-ink: var(--brand);
+  --good: #2b7339; --warn: #8f5b00; --warn-soft: #f5e8cf;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 6px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111513; --surface: #181d1a; --surface-2: #202622; --line: #2b322d; --ink: #e4e9e4; --ink-2: #bcc5bd; --muted: #8f9a91;
+  --brand-soft: color-mix(in srgb, var(--brand) 22%, #111513); --brand-ink: color-mix(in srgb, var(--brand) 55%, white);
+  --good: #72c67f; --warn: #e0b25a; --warn-soft: #362a14; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111513; --surface: #181d1a; --surface-2: #202622; --line: #2b322d; --ink: #e4e9e4; --ink-2: #bcc5bd; --muted: #8f9a91;
+  --brand-soft: color-mix(in srgb, var(--brand) 22%, #111513); --brand-ink: color-mix(in srgb, var(--brand) 55%, white);
+  --good: #72c67f; --warn: #e0b25a; --warn-soft: #362a14; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-sans); }
+main { max-width: 980px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+h1, h2 { text-wrap: balance; margin: 0; letter-spacing: -0.015em; }
+h1 { font-size: 28px; line-height: 1.2; }
+h2 { font-size: 18px; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--brand-ink); font-weight: 650; }
+.meta { color: var(--muted); font-size: 13px; }
+header { display: grid; gap: 8px; border-bottom: 2px solid var(--brand); padding-bottom: 18px; }
+section { display: grid; gap: 12px; min-width: 0; }
+.summary { background: var(--brand-soft); border-radius: var(--radius); padding: 16px 18px; font-size: 16px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.facts div { padding: 10px 14px; border-right: 1px solid var(--line); display: grid; gap: 2px; min-width: 0; }
+.facts div:last-child { border-right: 0; }
+.facts b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.facts span { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); background: var(--surface-2); padding: 8px 12px; white-space: nowrap; }
+td { padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.first { display: inline-block; font-size: 11px; font-weight: 650; padding: 1px 7px; border-radius: 999px; background: var(--brand); color: #fff; margin-left: 6px; vertical-align: 1px; }
+.label { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.not { color: var(--ink-2); }
+ol.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-left: 2px solid var(--line); }
+ol.timeline li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; padding: 8px 0 12px 14px; position: relative; }
+ol.timeline li::before { content: ""; position: absolute; left: -6px; top: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); }
+ol.timeline time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; padding-top: 1px; }
+ol.timeline strong { display: block; }
+.note { background: var(--warn-soft); color: var(--warn); border-radius: var(--radius); padding: 10px 14px; font-size: 13.5px; }
+.mock { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.mock iframe { display: block; width: 100%; height: 720px; border: 0; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+a { color: var(--brand-ink); }
+a:focus-visible, iframe:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 600px) {
+  h1 { font-size: 23px; }
+  .facts div { border-right: 0; border-bottom: 1px solid var(--line); }
+  ol.timeline li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .mock iframe { height: 640px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="eyebrow">Lead plan · {{STATUS: draft or approved}}</span>
+    <h1>{{COMPANY}}: who to reach, through which channels, and what it costs</h1>
+    <p class="meta">{{WEBSITE}} · researched {{DATE}} · hosting: {{MODE: A Supabase + Vercel | B your own host and database | C no app, local}}</p>
+  </header>
+
+  <p class="summary">{{ONE PARAGRAPH: what they sell, to whom, the first channel and why, monthly cost, when the first emails go out.}}</p>
+
+  <div class="facts">
+    <div><b>{{N}}</b><span>Channels picked</span></div>
+    <div><b>{{$X}}</b><span>Per month at start</span></div>
+    <div><b>{{$Y}}</b><span>Per month steady</span></div>
+    <div><b>{{week N}}</b><span>First emails</span></div>
+  </div>
+
+  <section>
+    <h2>Who buys</h2>
+    <p>{{3–5 short lines: buyer roles, company type and size, countries, the tool or trigger that makes the offer relevant, who we never contact.}}</p>
+  </section>
+
+  <section>
+    <h2>Competitors and the gap</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Competitor</th><th>Offer and price</th><th>Channels they use</th><th>Gap for {{COMPANY}}</th></tr></thead>
+      <tbody>
+        <!-- repeat per competitor; every fact sourced -->
+        <tr><td>{{name}}</td><td>{{offer, price if public}}</td><td>{{channels}}</td><td>{{gap}}</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Channels</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Channel</th><th>Why it fits</th><th>Needs</th><th class="num">Cost / month</th><th>What we measured</th></tr></thead>
+      <tbody>
+        <!-- repeat; add <span class="first">first</span> after the first channel's name -->
+        <tr><td>{{channel}}<span class="first">first</span></td><td>{{the fact from research}}</td><td>{{services}}</td><td class="num">{{$}}</td><td>{{author's result}} <span class="label">{{measured, date}}</span></td></tr>
+      </tbody>
+    </table></div>
+    <p class="not"><strong>Not doing:</strong> {{channel - why}}.</p>
+  </section>
+
+  <section>
+    <h2>Services to set up</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Service</th><th>For</th><th>Free tier or price</th><th class="num">Per month</th><th>Needed by</th></tr></thead>
+      <tbody>
+        <!-- repeat; prices only from kb/tools.md, with their label -->
+        <tr><td>{{service}}</td><td>{{for}}</td><td>{{tier}} <span class="label">{{label}}</span></td><td class="num">{{$}}</td><td>{{week}}</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Timeline</h2>
+    <ol class="timeline">
+      <!-- repeat per milestone; milestones are events, not results -->
+      <li><time>{{Week 0}}</time><div><strong>{{milestone}}</strong>{{done when}}</div></li>
+    </ol>
+    <p class="note">We don't forecast replies or meetings. The bundle author's own cold sends had 0 human replies from 119 first emails (to 2026-11-06), so every channel is judged on its own numbers after 30 delivered and follow-up 1, with stop-loss rules on bounces and complaints.</p>
+  </section>
+
+  <section>
+    <h2>Your dashboard</h2>
+    <p>Example data in your colours. Every company and person in it is made up.</p>
+    <div class="mock"><iframe src="dashboard-mock.html" title="Dashboard mock with example data" loading="lazy"></iframe></div>
+    <p class="meta"><a href="dashboard-mock.html">Open the mock on its own page</a></p>
+  </section>
+
+  <section>
+    <h2>Check these</h2>
+    <ul class="plain">
+      <!-- items research could not settle, each with its assumed default -->
+      <li>{{item}}: assumed {{default}}, because {{why}}.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <ul class="plain"><li>{{risk}}</li></ul>
+  </section>
+
+  <footer>Built by the Lead Engine plan skill from public sources, {{DATE}}. Labels: measured = the bundle author's runs; sourced = a named page and date; assumed = our judgement. Prices change: check each provider before paying.</footer>
+</main>
+</body>
+</html>

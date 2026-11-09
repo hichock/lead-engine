@@ -26,7 +26,7 @@ system in the evidence line (ops director for a client portal, practice manager 
    ```bash
    node scripts/le.mjs src '{"source":"monid","company_id":"<uuid>","params":{"path":"run","stage":"contact","maxUsd":0.1,"body":{"provider":"hunter","endpoint":"/domain-search","input":{"domain":"acme.example","limit":3}}}}'
    ```
-   The `body` above is an example: use `discover` / `inspect` first (free) to get the exact endpoint name, price and
+   The `body` above is an example: use `discover` / `inspect` first (free, no company_id needed) to get the exact endpoint name, price and
    input shape, and save them in `kb/sources.md` notes so later runs skip this step:
    `node scripts/le.mjs src '{"source":"monid","params":{"path":"discover","body":{"query":"hunter domain search"}}}'`
 5. **ContactOut via Monid (paid, ~$0.10 when found).** Only for a high-score company where you have the person's

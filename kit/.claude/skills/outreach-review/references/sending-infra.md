@@ -35,3 +35,12 @@ $39 Base plan; Pro is $94/mo (measured 2026-11-03), which the own sender saves.
 Google Workspace: 2-step verification on → create an app password → Settings → Mailboxes → Add (SMTP
 smtp.gmail.com:465, IMAP imap.gmail.com:993). Start the cap at 10–15. Microsoft 365: SMTP AUTH must be enabled
 for the mailbox; use smtp.office365.com:587 and outlook.office365.com:993 (assumed; check your tenant).
+
+## More rules (generic playbook, sourced)
+- Verify every list right before it is queued; re-verify after about 1 to 2 weeks. Bounces over 2% hurt the domain.
+- Do not link the main site in cold bodies (link reputation); at most one link, never in email 1, never a shortener.
+- Redirect lookalike domains to the main site over HTTPS (Cloudflare redirect rules do; some registrars' forwarding
+  does not). Zapmail can forward by API.
+- Registrars: buy TLDs Zapmail can't (for example .co.uk) at a registrar with an API; links in `kb/tools.md`.
+- Sequencer-bundled mailboxes can lock you in (domains can't leave, fixed terms): fine for a one-off, not for a system.
+- One warm-up tool per mailbox. Keep 10 to 20% spare warmed domains so a blocklisted one can be retired at once.

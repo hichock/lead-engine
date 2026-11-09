@@ -85,11 +85,11 @@ test("the same input inside 24 h is refused by the ledger", async () => {
 });
 
 test("mailboxes come from MAILBOX_n env lines and need a password", () => {
-  const boxes = parseMailboxes({ MAILBOX_1: "me@send.example|Mark|smtp.gmail.com:465|imap.gmail.com:993|20", MAILBOX_1_PASSWORD: "x" });
+  const boxes = parseMailboxes({ MAILBOX_1: "me@send.example|Dana|smtp.gmail.com:465|imap.gmail.com:993|20", MAILBOX_1_PASSWORD: "x" });
   assert.equal(boxes[0].row.email, "me@send.example");
   assert.equal(boxes[0].row.smtp_port, 465);
   assert.equal(boxes[0].row.daily_cap, 20);
-  assert.throws(() => parseMailboxes({ MAILBOX_2: "me@send.example|Mark|smtp.gmail.com:465" }), /MAILBOX_2_PASSWORD/);
+  assert.throws(() => parseMailboxes({ MAILBOX_2: "me@send.example|Dana|smtp.gmail.com:465" }), /MAILBOX_2_PASSWORD/);
 });
 
 test("send plans nothing outside the lead's window (dry run)", async () => {

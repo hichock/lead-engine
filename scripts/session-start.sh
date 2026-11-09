@@ -7,7 +7,7 @@ cd "${CLAUDE_PROJECT_DIR:-.}" 2>/dev/null || exit 0
 if [ -f kb/setup-state.md ]; then
   echo "Lead Engine: setup is in progress here (kb/setup-state.md). Resume with /lead-engine:setup."
 else
-  echo "Lead Engine plugin is installed. This folder has no Lead Engine project yet: run /lead-engine:setup to create one (repo, database, deploy, knowledge base)."
+  echo "Lead Engine plugin is installed. This folder has no Lead Engine project yet: run /lead-engine:setup (it researches your website and proposes a plan first; nothing is created before you approve it)."
 fi
 echo "Lead Engine plugin root: ${CLAUDE_PLUGIN_ROOT}"
 exit 0
