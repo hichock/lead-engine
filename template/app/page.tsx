@@ -58,6 +58,10 @@ function Filters({ vm, f }: { vm: LeadsView; f: ReturnType<typeof parseFilters> 
       </label>
       <button className="btn" type="submit">Filter</button>
       {vm.filtered ? <Link className="btn ghost" href="/">Clear</Link> : null}
+      <span className="export">
+        <a className="btn ghost" href="/export/leads" download>Export CSV</a>
+        <a className="btn ghost" href="/export/leads?for=sequencer" download title="Only verified people at qualified companies, with drafted emails">For a sequencer</a>
+      </span>
     </form>
   );
 }

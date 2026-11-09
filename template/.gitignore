@@ -9,3 +9,9 @@ next-env.d.ts
 .vercel
 .DS_Store
 supabase/.temp/
+
+# local mode store and exports (personal data: never commit)
+data/
+*.db
+*.db-wal
+*.db-shm

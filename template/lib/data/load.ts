@@ -118,3 +118,13 @@ export const loadSettings = () => load<SettingsData>(
     mailboxes: await mailboxesWithCounts(db), forwardTo: String((await setting(db, "forward_to")) ?? ""), email,
   }),
 );
+
+// CSV export (Leads page button): companies, people and messages as the signed-in user.
+export const loadExport = () => load(
+  () => ({ companies: demoCompanies, people: demoPeople, messages: demoMessages }),
+  async ({ db }) => ({
+    companies: (await rows(db, "companies", "*")).map(toCompany),
+    people: (await rows(db, "people", "*")).map(toPerson),
+    messages: (await rows(db, "messages", "id, person_id, company_id, channel, mailbox, step, subject, body, direction, class, status, send_after, sent_at")).map(toMessage),
+  }),
+);

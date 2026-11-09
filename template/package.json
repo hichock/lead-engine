@@ -12,7 +12,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test \"lib/**/*.test.ts\"",
-    "le": "node scripts/le.mjs"
+    "le": "node scripts/le.mjs",
+    "local": "node --no-warnings=ExperimentalWarning --import tsx scripts/local.ts",
+    "mock": "node --no-warnings=ExperimentalWarning --import tsx scripts/local.ts report --example"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -4,6 +4,9 @@
 // "qualified companies only" rule in code. Keys never leave the server.
 //
 // Needs LEAD_ENGINE_URL and AGENT_TOKEN (from .env.local, or the cloud environment's variables).
+// Local mode (no app): set LEAD_ENGINE_MODE=local in .env.local and every command runs on this machine against a
+// SQLite file or your own Postgres (scripts/local.ts), with the same caps, ledger and send checks. Extra local
+// commands: init, send, replies, export, report.
 //
 //   node scripts/le.mjs read to-qualify [limit=50]        work list for a skill (views: to-qualify, to-contact,
 //                                                         to-verify, to-write, drafts, replies, funnel, company domain=x)
@@ -16,7 +19,9 @@
 //   node scripts/le.mjs env                               which variables are set (names only, never values)
 
 import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 function loadEnvFile() {
   const p = resolve(process.cwd(), ".env.local");
@@ -65,10 +70,15 @@ async function sql(query) {
   if (!res.ok) process.exitCode = 1;
 }
 
-const NAMES = ["LEAD_ENGINE_URL", "AGENT_TOKEN", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_PROJECT_REF", "SUPABASE_ACCESS_TOKEN", "URLSCAN_API_KEY", "GCP_SA_KEY", "APIFY_TOKEN", "MONID_API_KEY", "MILLIONVERIFIER_API_KEY", "APOLLO_API_KEY"];
+const NAMES = ["LEAD_ENGINE_MODE", "LEAD_ENGINE_URL", "AGENT_TOKEN", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_PROJECT_REF", "SUPABASE_ACCESS_TOKEN", "URLSCAN_API_KEY", "GCP_SA_KEY", "APIFY_TOKEN", "MONID_API_KEY", "MILLIONVERIFIER_API_KEY", "APOLLO_API_KEY"];
 
 loadEnvFile();
 const [cmd, ...args] = process.argv.slice(2);
+if (process.env.LEAD_ENGINE_MODE === "local") {
+  const script = resolve(dirname(fileURLToPath(import.meta.url)), "local.ts");
+  const r = spawnSync(process.execPath, ["--no-warnings=ExperimentalWarning", "--import", "tsx", script, ...process.argv.slice(2)], { stdio: "inherit" });
+  process.exit(r.status ?? 1);
+}
 switch (cmd) {
   case "read": {
     const qs = new URLSearchParams({ view: args[0] ?? "" });
