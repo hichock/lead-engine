@@ -22,7 +22,7 @@ can't run without them.
 ## 0. Find the bundle files
 Bundle root (holds `template/` and `kit/`): the session line "Lead Engine plugin root: …", else `${CLAUDE_PLUGIN_ROOT}`,
 else `ls -d ~/.claude/plugins/marketplaces/lowcoding-leads ~/.claude/plugins/cache/lowcoding-leads/lead-engine/* 2>/dev/null | head -1`,
-else `git clone --depth 1 https://github.com/lowcoding-dev/lead-engine "$TMPDIR/lead-engine"`. Call it `$LE`.
+else `git clone --depth 1 https://github.com/hichock/lead-engine "$TMPDIR/lead-engine"`. Call it `$LE`.
 
 ## 1. Check what's already there (environment-check.md)
 Local or cloud session; which connectors answer (Supabase, Vercel, GitHub, Zapmail); which CLIs are logged in; which

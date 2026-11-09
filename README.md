@@ -44,7 +44,7 @@ The rule that keeps it cheap is enforced in code, not in a prompt: **discover fr
 In Claude Code:
 
 ```
-/plugin marketplace add lowcoding-dev/lead-engine
+/plugin marketplace add hichock/lead-engine
 /plugin install lead-engine@lowcoding-leads
 ```
 
