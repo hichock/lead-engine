@@ -2,7 +2,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { sliceQueries, uniqueHosts } from "./urlscan";
 import { techDomainsSql, techNamesSql } from "./httparchive";
-import { estimate } from "./registry";
+import { estimate, stageOf } from "./registry";
+import { decideCall } from "../guard";
+import { DEFAULT_CAPS } from "../caps";
 
 test("urlscan: 30 days in 3-day slices, newest first", () => {
   const q = sliceQueries("domain:softr-files.com AND NOT page.domain:softr.app");
@@ -37,4 +39,24 @@ test("cost estimates per call", () => {
   assert.deepEqual(estimate("urlscan", { q: "x", slices: true }), { usd: 0, units: 10 });
   assert.deepEqual(estimate("apify", { maxUsd: 1.2 }), { usd: 1.2, units: 0 });
   assert.deepEqual(estimate("monid", { maxUsd: 0.1 }), { usd: 0.1, units: 0 });
+});
+
+test("Monid free lookups need no company; a paid run is always contact or verify", () => {
+  assert.equal(stageOf("monid", { path: "discover" }), "discover");
+  assert.equal(stageOf("monid", { path: "inspect" }), "discover");
+  assert.equal(stageOf("monid", { path: "wallet/balance" }), "discover");
+  assert.equal(stageOf("monid", { path: "run" }), "contact");
+  assert.equal(stageOf("monid", { path: "run", stage: "verify" }), "verify");
+  assert.equal(stageOf("monid", { path: "run", stage: "discover" }), "contact");
+  assert.equal(stageOf("monid", {}), "contact");
+});
+
+test("a free Monid discover call without a company is allowed; a paid run without one is refused", () => {
+  const source = { key: "monid" as const, stage: "contact" as const, paid: true };
+  const fresh = { usdToday: 0, unitsToday: 0, usdThisMonth: 0 };
+  const free = { path: "discover", body: { query: "hunter domain search" } };
+  assert.deepEqual(decideCall({ source, enabled: true, estimate: estimate("monid", free), stageOverride: stageOf("monid", free), company: null }, DEFAULT_CAPS, fresh), { ok: true });
+  const paid = { path: "run", maxUsd: 0.1, stage: "discover" };
+  const d = decideCall({ source, enabled: true, estimate: estimate("monid", paid), stageOverride: stageOf("monid", paid), company: null }, DEFAULT_CAPS, fresh);
+  assert.equal(d.ok, false);
 });

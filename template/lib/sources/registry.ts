@@ -43,8 +43,14 @@ export function isDeduped(key: SourceKey, p: P): boolean {
 }
 
 // Monid and Apify serve several stages; the caller says which, and contact/verify then need a qualified company.
+// Monid's free lookups (discover, inspect, runs/<id>, wallet/balance) need no company. A paid Monid `run` is always a
+// contact or verify call (default contact), so it can never skip the qualified-only rule by claiming another stage.
 export function stageOf(key: SourceKey, p: P): SourceDef["stage"] {
   const s = p.stage;
-  if ((key === "apify" || key === "monid") && (s === "discover" || s === "contact" || s === "verify" || s === "research")) return s;
+  if (key === "monid") {
+    if (p.path !== undefined && p.path !== "run") return "discover";
+    return s === "verify" ? "verify" : "contact";
+  }
+  if (key === "apify" && (s === "discover" || s === "contact" || s === "verify" || s === "research")) return s;
   return SOURCES[key].stage;
 }

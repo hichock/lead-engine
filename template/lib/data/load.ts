@@ -4,8 +4,11 @@ import { userClient } from "../supabase/server";
 import { allRows } from "../supabase/admin";
 import { readCaps, readSend, type Caps, type SendSettings } from "../caps";
 import { demoCompanies, demoMailboxes, demoMessages, demoPeople, demoRuns, demoSignals, DEMO_NOW } from "../demo";
-import type { Company, Mailbox, Message, Person, Signal, SourceRun } from "../types";
+import type { Mailbox, SourceRun } from "../types";
+import { num, str, toCompany, toMessage, toPerson, toRun, toSignal, type R } from "./rows";
 import { startOfRunDay } from "../sender/window";
+
+export { toCompany, toMessage, toPerson, toRun, toSignal };
 
 // Loaders for pages: read only, as the signed-in user (RLS applies). Each returns a typed shape with defaults
 // applied, or a state the page shows instead ("connect Supabase", "sign in", "no access", "could not load").
@@ -39,39 +42,6 @@ async function load<T>(demo: () => T, live: (c: Ctx) => Promise<T>): Promise<Loa
     return { mode: "error", message: (e as Error).message };
   }
 }
-
-// Row mappers: normalise once here.
-type R = Record<string, unknown>;
-const str = (v: unknown) => (typeof v === "string" ? v : null);
-const num = (v: unknown) => (v == null ? 0 : Number(v));
-
-export const toCompany = (r: R): Company => ({
-  id: String(r.id), domain: String(r.domain), name: str(r.name) ?? "", country: str(r.country), sizeBand: str(r.size_band),
-  tech: Array.isArray(r.tech) ? r.tech.map(String) : [], source: str(r.source) ?? "manual", evidence: str(r.evidence),
-  qualified: typeof r.qualified === "boolean" ? r.qualified : null, qualifyReason: str(r.qualify_reason),
-  score: r.score == null ? null : Number(r.score), why: Array.isArray(r.why) ? r.why.map(String) : [],
-  status: (str(r.status) ?? "new") as Company["status"], createdAt: String(r.created_at),
-});
-export const toSignal = (r: R): Signal => ({
-  id: String(r.id), companyId: String(r.company_id), personId: str(r.person_id), kind: r.kind as Signal["kind"],
-  value: String(r.value), url: str(r.url), observedAt: String(r.observed_at),
-});
-export const toPerson = (r: R): Person => ({
-  id: String(r.id), companyId: String(r.company_id), name: str(r.name) ?? "", role: str(r.role), email: str(r.email),
-  verifyStatus: (str(r.verify_status) ?? "unverified") as Person["verifyStatus"], verifySource: str(r.verify_source),
-  linkedinUrl: str(r.linkedin_url), offerKey: str(r.offer_key), suppressed: r.suppressed === true,
-});
-export const toMessage = (r: R): Message => ({
-  id: String(r.id), personId: String(r.person_id), companyId: String(r.company_id), channel: (str(r.channel) ?? "email") as Message["channel"],
-  mailbox: str(r.mailbox), step: num(r.step), subject: str(r.subject) ?? "", body: str(r.body) ?? "",
-  direction: (str(r.direction) ?? "out") as Message["direction"], class: str(r.class), status: (str(r.status) ?? "draft") as Message["status"],
-  sendAfter: str(r.send_after), sentAt: str(r.sent_at),
-});
-export const toRun = (r: R): SourceRun => ({
-  id: String(r.id), source: String(r.source), inputHash: String(r.input_hash), startedAt: String(r.started_at),
-  rowsIn: num(r.rows_in), rowsKept: num(r.rows_kept), costUsd: num(r.cost_usd), units: num(r.units),
-  status: (str(r.status) ?? "ok") as SourceRun["status"], note: str(r.note),
-});
 
 async function rows(db: SupabaseClient, table: string, select: string, order = "id"): Promise<R[]> {
   return allRows<R>((from, to) => db.from(table).select(select).order(order).range(from, to) as unknown as PromiseLike<{ data: R[] | null; error: { message: string } | null }>);
