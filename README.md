@@ -6,36 +6,11 @@ One command sets it all up. It starts by researching your website, niche and com
 
 ![Leads page](docs/screenshots/leads-desktop.png)
 
-<p>
-  <img src="docs/screenshots/company-desktop.png" width="64%" alt="Company page with signals timeline and why-this-score">
-  <img src="docs/screenshots/leads-phone.png" width="27%" alt="Leads page on a phone">
-</p>
-
 *Screenshots use the built-in demo data (`npm run demo`). Every company and person in them is made up.*
 
 ## How it works
 
-```mermaid
-flowchart LR
-  subgraph Discover["Discover (free first)"]
-    T[Tech fingerprints<br/>HTTP Archive + urlscan]
-    R[Registers<br/>bar directories, Companies House]
-    P[People search<br/>Apollo free]
-    S[Social<br/>viral-post commenters]
-  end
-  T & R & P & S --> Q[Qualify<br/>live site, gates in kb/icp.md]
-  Q -->|qualified only| C[Find contact<br/>site, pattern, Monid]
-  C --> V[Verify<br/>MillionVerifier: only ok]
-  V --> A[Activity research<br/>optional]
-  A --> SC[Score<br/>fit x trigger, with reasons]
-  V --> SC
-  SC --> F[First lines<br/>drafts, max 90 words]
-  F --> OK{You approve}
-  OK --> SEND[Own sender<br/>your mailboxes, local hours]
-  SEND --> REV[Outreach review<br/>replies, stop-loss, weekly kill/scale]
-  REV -.learns.-> KB[(kb/ knowledge base)]
-  KB -.read first.-> Discover
-```
+![How lead-engine works: free sources find companies, each is qualified on its own website, contacts are paid for and verified only for qualified ones, then scored, first lines drafted for your approval and sent from your mailboxes, in 8 steps](docs/how-it-works.png)
 
 The rule that keeps it cheap is enforced in code, not in a prompt: **discover free, qualify on the website, pay for contacts only on qualified companies, verify, then send.** The app refuses a paid lookup on an unqualified company, refuses the same paid call twice inside 24 hours, and refuses anything over your daily or monthly cap.
 
