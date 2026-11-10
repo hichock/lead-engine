@@ -6,6 +6,8 @@ description: ALWAYS use this skill when the owner wants "why now" signals added 
 
 Read `kb/RULES.md`, `kb/context.md`, `kb/icp.md` and `kb/sources.md` first. Then `references/signals.md` (what was
 tested and the verdicts: several popular signals failed) and `references/ats.md` (job-board endpoints).
+For plays not tested yet (past-client alumni, own connections + job-change diff, page followers, complaint
+posts, engager weights, tier → channel routing): `references/workflows-io-plays.md`.
 
 ## 1. Pick companies
 ```bash

@@ -13,6 +13,7 @@ lead-generation handbook (sourced 2026-11). Your own results go to `decisions.md
 
 ## Sources and signals
 - Signals tested and verdicts, plus the signal table approach: [signals](../.claude/skills/source-signals/references/signals.md), [job boards](../.claude/skills/source-signals/references/ats.md).
+- Untested plays from a public GTM library (alumni, own connections, page followers, complaint posts, engager weights, tier → channel): [extra plays](../.claude/skills/source-signals/references/workflows-io-plays.md).
 - Technology search: [fingerprints](../.claude/skills/source-tech/references/fingerprints.md), [HTTP Archive](../.claude/skills/source-tech/references/httparchive.md), [urlscan](../.claude/skills/source-tech/references/urlscan.md), [funnel numbers](../.claude/skills/source-tech/references/funnel.md).
 - Registers: [what worked](../.claude/skills/source-registers/references/registers.md), [adapter template](../.claude/skills/source-registers/references/adapter-template.md).
 - People search: [Apollo free search](../.claude/skills/source-people/references/apollo.md).
