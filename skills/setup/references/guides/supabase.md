@@ -28,6 +28,20 @@ Account (top right) → **Access Tokens** → **Generate new token** → name `l
 Project → **Authentication** → **URL Configuration**: Site URL = your app URL; Redirect URLs: add
 `https://<your-app>/**` and `http://localhost:3000/**`. Save.
 
+## Email (before anyone else signs in)
+Sign-in links are emailed by Supabase. Its built-in email only delivers to members of your Supabase organization, at
+most 2 emails an hour; any other address gets "Email address not authorized" (Supabase docs, "Custom SMTP", read
+2026-11-12). If you sign in with another address, or a teammate needs access, connect an email service first.
+Resend's free plan is enough (3,000 emails a month, 100 a day; resend.com/pricing, 2026-11-12). You need a domain where
+you can add DNS records (your sending domain or main domain both work for these few emails).
+1. Sign up at https://resend.com → **Domains → Add domain** → add the DNS records it shows → wait for **Verified**.
+2. **API Keys → Create API key** (permission **Sending access**). Copy it once.
+3. Supabase → your project → **Authentication → Emails → SMTP Settings** → **Enable custom SMTP**: sender
+   `no-reply@<verified domain>`, sender name, host `smtp.resend.com`, port `465`, username `resend`, password = the
+   API key → **Save** (values from Resend's guide "Send emails using Supabase with SMTP", read 2026-11-12).
+4. Supabase then allows 30 emails an hour (**Authentication → Rate Limits** to change it).
+Paste the key only into Supabase, never into the chat.
+
 ## Your own existing project (mode B)
 It works if the table names don't clash (companies, people, signals, messages, mailboxes, settings, suppression,
 sources_runs, team_members). Claude checks first and tells you.

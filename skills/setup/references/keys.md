@@ -1,14 +1,13 @@
 # Keys: which ones, where they go
 
 Ask only for the keys the approved plan's channels need. Sign-up links, free tiers and prices: **`kb/tools.md`**
-(the only place for links; show the plain URL when a link still reads `{{REF:…}}`). Step-by-step clicks:
+(the only place for links). Step-by-step clicks:
 `guides/`. Never print a key, never write one to `kb/` or git.
 
 Where each key goes:
 - **Mode A:** `.env.local` + Vercel env (`create_project_env` with the connector, or `vercel env add <NAME> production`), then redeploy.
 - **Mode B:** `.env.local` + the host's env vars, then rebuild.
-- **Mode C:** `.env.local` (local session). In a cloud session or scheduled task: the cloud environment's secrets
-  (`guides/claude-cloud-session.md`); the file would vanish with the container.
+- **Mode C:** `.env.local` on the owner's computer (mode C is local only).
 
 | Variable | Tool (kb/tools.md) | Guide | Needed for |
 |---|---|---|---|

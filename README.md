@@ -2,7 +2,9 @@
 
 A lead search engine that runs as a process inside Claude Code.
 It finds companies by signals (the tools they run on, public registers, job posts, comments on popular posts), checks each one on its own website, looks up and verifies contacts only for the ones that fit, ranks them with written reasons, drafts the first emails and sends them from your own warmed mailboxes.
-One command sets it all up. It starts by researching your website, niche and competitors and shows you a plan: which channels fit, which services you need and what they cost, a timeline, and a mock of your dashboard in your colours. You approve it; then it builds only what the plan needs, in one of three modes: on Supabase + Vercel, on your own host and database, or with no app at all (everything runs from Claude Code and the dashboard is a generated page).
+One command sets it all up. It starts by researching your website, niche and competitors and shows you a plan: which channels fit, which services you need and what they cost, a timeline, and a mock of your dashboard in your colours. You approve it; then it builds only what the plan needs, in one of three modes: on Supabase + Vercel (hosted), on your own host and database (hosted), or with no app at all on your own computer (everything runs from Claude Code there and the dashboard is a generated page).
+
+**You need a paid Claude plan** (Pro, Max, Team or Enterprise) **or Anthropic API credits**: the free claude.ai plan does not include Claude Code. The bundle itself is free (MIT).
 
 ![Leads page](docs/screenshots/leads-desktop.png)
 
@@ -14,9 +16,9 @@ One command sets it all up. It starts by researching your website, niche and com
 
 The rule that keeps it cheap is enforced in code, not in a prompt: **discover free, qualify on the website, pay for contacts only on qualified companies, verify, then send.** The app refuses a paid lookup on an unqualified company, refuses the same paid call twice inside 24 hours, and refuses anything over your daily or monthly cap.
 
-## Install (2 commands)
+## Install
 
-In Claude Code:
+**Claude Code on your computer** (2 commands):
 
 ```
 /plugin marketplace add hichock/lead-engine
@@ -24,6 +26,12 @@ In Claude Code:
 ```
 
 Then open an empty folder and run `/lead-engine:setup`.
+
+**Claude Code in the cloud (claude.ai/code), to run it hosted:** connect the Supabase and Vercel connectors in
+claude.ai (Settings → Connectors), start a session on an empty private GitHub repo and type
+`Set up lead-engine from github.com/hichock/lead-engine`. Plugins don't load in cloud sessions, so setup clones this
+repo and follows `skills/setup/SKILL.md`. It builds mode A: the app on Vercel and Supabase sends and reads replies on
+its own schedule, and your cloud scheduled tasks call it over HTTPS. Mode C (no app) is not offered in the cloud.
 
 ## What setup does
 
@@ -35,7 +43,7 @@ Then open an empty folder and run `/lead-engine:setup`.
 4. **Picks the mode** from what you have and confirms it in one line:
    - **A. Supabase + Vercel** (default; free tiers are fine to start).
    - **B. Your own host and database:** any Node host (Railway, Render, Fly, a VPS) and your Supabase project; env vars and cron alternatives in `template/HOSTING.md`.
-   - **C. No app:** everything runs from Claude Code with a local SQLite store (or your own Postgres); the dashboard is a generated HTML page refreshed by each run; sending through your own mailboxes (SMTP) or a CSV for your sequencer.
+   - **C. No app, on your computer:** everything runs from Claude Code with a local SQLite store (or your own Postgres); the dashboard is a generated HTML page refreshed by each run; sending through your own mailboxes (SMTP) or a CSV for your sequencer. It runs while your computer is on. Not in a cloud session: those allow only web traffic, so they can't reach Postgres, SMTP or IMAP, and their files don't last (measured 2026-11-12).
 5. **Builds only what the plan needs:** repo, database, deploy and sign-in check (A, B), or the local store (C). Connectors first, CLIs second. Step-by-step guides for every service are in `skills/setup/references/guides/`.
 6. **Adds the keys the plan's channels need**, free first (urlscan, Google BigQuery), MillionVerifier before the first send.
 7. **Schedules the jobs:** sending, replies and daily pulls (pg_cron, your host's scheduler, or `le send` / `le replies` in mode C), and the Claude runs (scheduled tasks or GitHub Actions).
@@ -44,14 +52,15 @@ Then open an empty folder and run `/lead-engine:setup`.
 
 ## What you need
 
-- Claude Code (Pro or higher if you want scheduled tasks in the cloud).
+- **A paid Claude plan or API credits.** Claude Code needs a Pro, Max, Team or Enterprise plan, or an Anthropic Console (API) account billed per use; the free claude.ai plan does not include it (sourced: code.claude.com/docs/en/setup, read 2026-11-12). Scheduled runs use the same plan.
 - A GitHub account.
-- Mode A: a Supabase account (the free plan works to start; free projects pause when idle) and a Vercel account (Hobby is for personal, non-commercial use, so a business should use Pro). Mode B: your own host and Supabase project. Mode C: nothing beyond Node 22.13+ (and a Postgres URL if you want the runs in the cloud).
+- Mode A: a Supabase account (the free plan works to start; free projects pause when idle) and a Vercel account (Hobby is for personal, non-commercial use, so a business should use Pro). Mode B: your own host and Supabase project. Mode C: your own computer with Node 22.13+, nothing else.
+- For sign-in emails to anyone who is not a member of your Supabase organization (teammates, or you with another address): your own email sending in Supabase (custom SMTP, for example Resend's free plan), because Supabase's built-in email only reaches organization members, 2 an hour (Supabase docs, read 2026-11-12). Guide: `skills/setup/references/guides/supabase.md` → "Email".
 - For sending: one or more secondary domains with warmed mailboxes (Google Workspace or Microsoft 365). Never your main domain.
 
 ## Costs
 
-The bundle is free. These are the outside services, with the default caps the app enforces. Prices were checked or measured in October and November 2026; check the provider before you pay. Sign-up links, free tiers and current discounts for every tool are in one file, [`kit/kb/tools.md`](kit/kb/tools.md). Some of those links are the author's referral links (you pay the same; it says so in the file).
+The bundle is free; running it needs your paid Claude plan or API usage (see What you need). These are the outside services, with the default caps the app enforces. Prices were checked or measured in October and November 2026; check the provider before you pay. Sign-up links, free tiers and current discounts for every tool are in one file, [`kit/kb/tools.md`](kit/kb/tools.md). Some of those links are the author's referral links (you pay the same; it says so in the file).
 
 | Service | Free tier | Paid | Default cap in the app |
 |---|---|---|---|
@@ -105,7 +114,7 @@ Each skill starts by reading `kb/RULES.md`, `kb/context.md` and its domain files
 | Outreach review: replies, stop-loss, queue | Claude scheduled task | weekday afternoons |
 | Weekly review and knowledge base tidy | Claude scheduled task | Mondays |
 
-The app does the fetching and sending, which needs no model. Claude does the judging and writing. In mode C there is no app: `node scripts/le.mjs send` and `replies` run from your computer's scheduler or a scheduled task, with the same send rules (see `skills/setup/references/scheduling.md`).
+The app does the fetching and sending, which needs no model. Claude does the judging and writing. In mode C there is no app: `node scripts/le.mjs send` and `replies` run from your computer's scheduler and the Claude runs from Claude Code desktop scheduled tasks, with the same send rules, while the computer is on (see `skills/setup/references/scheduling.md`). Cloud scheduled tasks work with mode A or B only.
 
 ## The knowledge base
 
@@ -141,10 +150,10 @@ This is not legal advice. Cold email to businesses is allowed in many places wit
 No. Our own cold sends from this kind of setup had 0 human replies from 119 first emails up to 2026-11-06, with follow-ups just starting. That is why the bundle reports the funnel per source and ships stop-loss and kill rules instead of rate promises.
 
 **Can I try it without accounts?**
-Yes: `cd template && npm install && npm run demo`, then open http://localhost:3000. Demo mode shows example data and saves nothing. Or run setup in mode C: no Supabase, no Vercel, everything local.
+Yes: `cd template && npm install && npm run demo`, then open http://localhost:3000. Demo mode shows example data and saves nothing. Or run setup on your computer in mode C: no Supabase, no Vercel, everything local.
 
 **I already have hosting and a database.**
-Use mode B: the app runs on any Node host and your Supabase project (`template/HOSTING.md`). With plain Postgres and no Supabase, use mode C with `LEAD_ENGINE_DB=postgres://…`: the web app needs Supabase's API and sign-in, so on plain Postgres the dashboard is the generated report.
+Use mode B: the app runs on any Node host and your Supabase project (`template/HOSTING.md`). With plain Postgres and no Supabase, use mode C on your computer with `LEAD_ENGINE_DB=postgres://…`: the web app needs Supabase's API and sign-in, so on plain Postgres the dashboard is the generated report.
 
 **I'm stuck.**
 Say "I need help". The `get-help` skill summarises the problem without keys or secrets, confirms how to reach you and sends it to the author (`GET https://jobsearch-roan-ten.vercel.app/api/support` describes the endpoint). A person reads every request. Or email info@lowcoding.dev.

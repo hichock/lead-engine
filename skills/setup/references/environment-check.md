@@ -42,7 +42,7 @@ In a cloud session, keys belong in the environment's secrets (guide: `guides/cla
 | Situation | What to do |
 |---|---|
 | Cloud session, the attached repo is empty (only `.git`, maybe README or LICENSE) | Use it. Say so in one line. |
-| Cloud session, the attached repo has code | List what would clash (`package.json`, `app/`, `lib/`, `scripts/`, `CLAUDE.md`, `.claude/`). No clash → ask once: "Set up Lead Engine inside <repo>? I only add files; nothing is overwritten." Clash → explain the two ways out: create a new empty private repo and attach it to a new session (`guides/claude-cloud-session.md`), or keep this repo and use mode C in a subfolder. Never create a repo from a cloud session. |
+| Cloud session, the attached repo has code | List what would clash (`package.json`, `app/`, `lib/`, `scripts/`, `CLAUDE.md`, `.claude/`). No clash → ask once: "Set up Lead Engine inside <repo>? I only add files; nothing is overwritten." Clash → explain the two ways out: create a new empty private repo and attach it to a new session (`guides/claude-cloud-session.md`), or keep this repo and set up in a subfolder `lead-engine/` (`bash "$LE/scripts/scaffold.sh" lead-engine`; Vercel's Root Directory is then `lead-engine`). Never create a repo from a cloud session. Mode C is not offered in a cloud session (modes.md). |
 | Local, empty folder | Use it; the repo is created with `gh repo create --private` after the plan is approved. |
 | Local, folder with code | Same clash check; offer a new folder `./lead-engine` instead. |
 | Local, no `gh` login | Ask the owner to run `gh auth login` (`guides/github.md`), or skip GitHub for now in mode C (git stays local). |

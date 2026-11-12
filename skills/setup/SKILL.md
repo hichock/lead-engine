@@ -32,8 +32,11 @@ to one with code, or explain how to create and attach a new one (`guides/claude-
 
 ## 2. Scaffold (checklist §1–2)
 Tools: node ≥ 22.13 and git are required; gh, supabase and vercel CLIs only if the mode needs them and no connector
-answers. Copy the app and the kit without overwriting (`cp -Rn`), start `npm install` in the background. Open
-`kb/setup-state.md` and tick § 1.
+answers. `git init` if needed, then `bash "$LE/scripts/scaffold.sh" .`: it copies the app and the kit without
+overwriting, always adds the secret and personal-data lines to `.gitignore` (also an existing one) and installs a
+pre-commit check. Confirm `git check-ignore -q .env.local`, start `npm install` in the background. Open
+`kb/setup-state.md` and tick § 1. **Every commit in this setup goes through `bash scripts/check-staged.sh`**, which
+refuses if an `.env*` file, `data/` or `docs/report.html` is staged.
 
 ## 3. Plan (the `plan` skill)
 Get the website URL from the folder, the repo README, `kb/context.md` or the session; ask for it only if none of
@@ -47,16 +50,18 @@ Pick A, B or C from step 1 and the plan. Confirm in one line ("You have X, so I'
 `kb/context.md` § Setup and `kb/decisions.md`.
 
 ## 5. Build only what the plan and mode need
-- **Repo:** local with gh → `gh repo create <name> --private --source . --push` (checklist §5). Cloud → commit and push
-  to the attached repo's branch.
+- **Repo:** local with gh → `gh repo create <name> --private --source . --push` (checklist §5). Cloud → commit
+  (`git add -A && bash scripts/check-staged.sh && git commit …`) and push to the attached repo's branch.
 - **Mode A:** Supabase (connector first, else CLI; checklist §3, §6), Vercel (connector first, else CLI; §3, §7),
   owner in `team_members`, auth URLs, deploy, then check: `/login` answers 200, `node scripts/le.mjs read funnel`
-  answers JSON (not 401), the owner signs in by magic link and sees an empty Leads page. Note: Vercel Hobby is
-  non-commercial; a business should use Pro.
+  answers JSON (not 401), the owner signs in by magic link and sees an empty Leads page. The magic link only arrives
+  if the owner's email is a member of their Supabase organization or custom SMTP is on (`guides/supabase.md` →
+  "Email"; required before any teammate signs in). Note: Vercel Hobby is non-commercial; a business should use Pro.
 - **Mode B:** reuse their Supabase project (check table names don't clash, then apply the migrations), give the
   owner the env-var list and the scheduler options from the app's `HOSTING.md`, check the same three things on their URL.
-- **Mode C:** checklist §4: `LEAD_ENGINE_MODE=local`, store (SQLite locally; `LEAD_ENGINE_DB=postgres://…` + `npm i pg`
-  for cloud or scheduled runs), `node scripts/le.mjs init`.
+- **Mode C (local session only):** checklist §4: `LEAD_ENGINE_MODE=local`, store (SQLite file, or their own Postgres
+  with `LEAD_ENGINE_DB=postgres://…` + `npm i pg`), `node scripts/le.mjs init`. In a cloud session mode C is not
+  offered: the session can't reach Postgres, SMTP or IMAP and its files don't last. Use mode A there.
 
 ## 6. Keys for the plan's sources (keys.md)
 Only the ones the approved channels use, free first (urlscan; BigQuery if tech search is in the plan; MillionVerifier
@@ -66,8 +71,9 @@ where the mode says, tick it. Mode A: redeploy once at the end. Leave caps at th
 ## 7. Schedules (scheduling.md)
 - Mode A/B: frequent app jobs in Supabase pg_cron (checklist §9) or the host's scheduler (`HOSTING.md`). Write the icp
   targets into the app: `node scripts/le.mjs ingest '{"scoring":{"countries":[…],"tools":[…]}}'`.
-- Every mode: the recurring Claude runs (Claude Code scheduled tasks, desktop tasks or GitHub Actions); mode C also
-  `le send` and `le replies` (scheduling.md § Mode C).
+- Mode A/B: the recurring Claude runs (cloud scheduled tasks, desktop tasks or GitHub Actions) call the app over
+  HTTPS. Mode C: Claude Code desktop scheduled tasks and the computer's own scheduler for `le send` and `le replies`
+  (scheduling.md § Mode C); runs only while the computer is on.
 
 ## 8. First run ($0)
 The plan's first channel with free sources only (for tech search: `source-tech` urlscan 30-day slices, and one HTTP
@@ -84,7 +90,7 @@ Mondays         weekly review: what to kill or scale, with numbers; decisions go
 Stuck?          say "I need help": the get-help skill contacts the bundle's author (or email info@lowcoding.dev)
 Check these     <the plan's "Check these" items and any `needs input` in kb/>
 ```
-Commit kb changes (`git add kb docs/plan.html docs/dashboard-mock.html docs/mock-data.json && git commit -m "kb: setup done"`
+Commit kb changes (`git add kb docs/plan.html docs/dashboard-mock.html docs/mock-data.json && bash scripts/check-staged.sh && git commit -m "kb: setup done"`
 and push). Write `kb/runs/<YYYY-MM-DD>-setup.md` (mode, what was created and where, what is open; no keys) and fill
 the `kb/sources.md` rows for every key added.
 

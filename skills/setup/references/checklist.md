@@ -14,11 +14,14 @@ Run from the project folder. Replace `<…>`. Tick the matching line in `kb/setu
 
 ## §2 Copy
 ```bash
-cp -Rn "$LE/template/." . && cp -Rn "$LE/kit/." .
-[ -d .git ] || git init -q
-cp -n .env.example .env.local   # fill as you go; .env.local is gitignored
-(npm install && npx tsc --noEmit && npm test) > /tmp/le-install.log 2>&1 &   # runs while the plan is researched
+[ -d .git ] || git -C . rev-parse --is-inside-work-tree >/dev/null 2>&1 || git init -q
+bash "$LE/scripts/scaffold.sh" .            # copies without overwriting, merges .gitignore, installs the pre-commit check
+[ -f .env.local ] || cp .env.example .env.local   # fill as you go
+git check-ignore -q .env.local && echo "env ignored"   # must print; scaffold stops with an error otherwise
+(npm install && npx tsc --noEmit && npm test) > "${TMPDIR:-/tmp}/le-install.log" 2>&1 &   # runs while the plan is researched
 ```
+Scaffold never overwrites a file, with one exception: it always adds the ignore lines for secrets and prospects' data
+(`.env*`, `!.env.example`, `/data/`, `*.db`, `docs/report.html`, …) to an existing `.gitignore`.
 Inside an existing repo with its own `CLAUDE.md`: `cp -n` keeps theirs; append the kit's file under a heading
 `## Lead Engine` instead (`cat "$LE/kit/CLAUDE.md" >> CLAUDE.md` after checking it is not there yet).
 
@@ -46,18 +49,21 @@ Also ask the owner for a Supabase personal access token (supabase.com/dashboard/
 `.env.local` as `SUPABASE_ACCESS_TOKEN`: `scripts/le.mjs sql` and the auth-config call below use it. It grants access
 to all their Supabase projects, so it stays local (not in Vercel, not in cloud environments).
 
-## §4 Mode C (no app)
+## §4 Mode C (no app, on the owner's computer only)
 ```bash
 grep -q '^LEAD_ENGINE_MODE=' .env.local && sed -i.bak 's/^LEAD_ENGINE_MODE=.*/LEAD_ENGINE_MODE=local/' .env.local || echo "LEAD_ENGINE_MODE=local" >> .env.local
-# cloud sessions and scheduled tasks: a Postgres URL, because container files don't last
-#   echo "LEAD_ENGINE_DB=postgres://…" >> .env.local && npm i pg      (in the cloud: an environment secret, not the file)
+# optional: their own Postgres instead of the SQLite file, reachable from this computer
+#   echo "LEAD_ENGINE_DB=postgres://…" >> .env.local && npm i pg
 node scripts/le.mjs init && node scripts/le.mjs env
 ```
+Not in a cloud session or cloud scheduled task: their network only allows web (HTTPS) traffic, so Postgres (5432,
+6543), SMTP (465, 587) and IMAP (993) connections are refused (measured 2026-11-12 in a claude.ai/code session), and
+the SQLite file is lost when the container ends. To run hosted, use mode A (or B).
 Skip §5 GitHub only if the owner wants no remote at all (kb/ stays in local git).
 
 ## §5 GitHub
 ```bash
-git add -A && git commit -qm "Lead Engine: app and kit"
+git add -A && bash scripts/check-staged.sh && git commit -qm "Lead Engine: app and kit"   # refuses staged .env* or data
 gh repo create <name> --private --source . --remote origin --push
 ```
 
@@ -83,6 +89,9 @@ curl -s -X PATCH -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-T
   -d '{"site_url":"https://<app>.vercel.app","uri_allow_list":"https://<app>.vercel.app/**,http://localhost:3000/**"}'
 ```
 More teammates later: the same insert with their email.
+**Sign-in email:** the magic link is sent by Supabase. Its built-in email only delivers to members of the owner's
+Supabase organization, at most 2 an hour (sourced: Supabase docs "Custom SMTP", read 2026-11-12). If the owner signs
+in with another address, or for any teammate, set custom SMTP first: `guides/supabase.md` → "Email".
 
 ## §7 Vercel
 ```bash

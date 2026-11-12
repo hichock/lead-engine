@@ -24,7 +24,9 @@ npx tsc --noEmit && npm test && npm run build
 Set `LEAD_ENGINE_MODE=local` in `.env.local`. `node scripts/le.mjs` then runs every command on this machine
 (`scripts/local.ts`) against a SQLite file (`data/lead-engine.db`, gitignored) or your own Postgres
 (`LEAD_ENGINE_DB=postgres://…`, after `npm i pg`). Same guard, ledger, scoring and send checks as the app
-(`lib/local/`). Extra commands:
+(`lib/local/`). Local mode is for your own computer: a Claude Code cloud session allows only web traffic, so it
+can't reach Postgres, SMTP or IMAP, and its files don't last. To run hosted, deploy the app (Vercel, or any Node host:
+`HOSTING.md`). Extra commands:
 
 ```bash
 node scripts/le.mjs init                         # create the store

@@ -18,8 +18,8 @@ Files in a cloud container disappear when the session ends, and keys must never 
 environment instead: claude.ai/code → the environment menu (cloud icon next to the repo) → **Edit environment** →
 **Environment variables** / **Secrets** → add each name and value → **Save**. New sessions get them.
 - Mode A/B scheduled runs need only `LEAD_ENGINE_URL` and `AGENT_TOKEN`.
-- Mode C needs `LEAD_ENGINE_MODE=local`, `LEAD_ENGINE_DB=postgres://…` (a free Supabase or Neon Postgres works), the
-  source keys and the `MAILBOX_n` lines.
+- Mode C (no app) does not work in a cloud session: the session allows only web (HTTPS) traffic, so it can't reach
+  a Postgres database, SMTP or IMAP, and its files are gone when it ends. In the cloud, use mode A.
 Allowed network hosts: if a call is blocked by the network policy, Claude tells you which host to allow in the same
 environment settings.
 

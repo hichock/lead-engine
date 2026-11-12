@@ -1,9 +1,9 @@
 node_modules/
 .next/
 out/
-.env
-.env.local
-.env.*.local
+# Secrets: every env file stays local, except the example with empty values.
+.env*
+!.env.example
 *.tsbuildinfo
 next-env.d.ts
 .vercel
@@ -11,7 +11,7 @@ next-env.d.ts
 supabase/.temp/
 
 # local mode store and exports (personal data: never commit)
-data/
+/data/
 *.db
 *.db-wal
 *.db-shm

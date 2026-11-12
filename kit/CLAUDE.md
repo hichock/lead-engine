@@ -59,7 +59,7 @@ node scripts/le.mjs queue <person_id> ...                  # after the owner app
 Exit code 3 = refused by a cap or the ledger: report it, don't work around it. HTTP 202 = a paid job is still
 running: call again with the same input later (it resumes, it never re-bills).
 
-Tool sign-up links and prices: only from `kb/tools.md` (show the plain URL when a link still reads `{{REF:…}}`).
+Tool sign-up links and prices: only from `kb/tools.md`.
 
 ## Code rules (full list: `kb/dev-rules.md`)
 - TypeScript strict. No `any` in new code; normalise data once where it enters (loaders, parsers).

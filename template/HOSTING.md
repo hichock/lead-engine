@@ -34,3 +34,5 @@ Pick one way to call them:
   does not run on plain Postgres (not built). Use the local mode with your Postgres as the store instead:
   `LEAD_ENGINE_MODE=local`, `LEAD_ENGINE_DB=postgres://…`, `npm i pg`. Skills work the same; the dashboard is the
   generated report (`node scripts/le.mjs report`), which you can serve from any static host behind your own login.
+  Local mode runs on a machine that can reach that Postgres and your mailboxes (your computer or your server), not in
+  a Claude Code cloud session or cloud scheduled task (web traffic only there).

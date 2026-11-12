@@ -21,7 +21,7 @@ Zapmail has no one-click export to this app: connect each mailbox with an app pa
 2. Same page → search "App passwords" → name `lead-engine` → **Create**. Copy the 16-letter password (shown once).
 3. Mode A/B: app → **Settings** → **Mailboxes** → **Add**: email, sender name, SMTP `smtp.gmail.com:465`, IMAP
    `imap.gmail.com:993`, the app password, daily cap 10 to 15.
-   Mode C: in `.env.local` (cloud: environment secrets):
+   Mode C (your computer): in `.env.local`:
    ```
    MAILBOX_1=you@send-domain.com|Your Name|smtp.gmail.com:465|imap.gmail.com:993|15
    MAILBOX_1_PASSWORD=<app password>
